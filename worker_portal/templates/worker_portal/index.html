@@ -1,0 +1,18 @@
+{% extends "worker_portal/base.html" %}
+
+{% block content %}
+  {% include "worker_portal/partials/language.html" %}
+  <section class="card auth-card" data-section="auth">
+    {% include "worker_portal/partials/tabs.html" %}
+    {% include "worker_portal/partials/login_form.html" %}
+    {% include "worker_portal/partials/register_form.html" %}
+  </section>
+  <section class="card dashboard hidden" data-section="dashboard">
+    {% include "worker_portal/partials/login_success.html" %}
+    {% include "worker_portal/partials/attendance_date.html" %}
+    {% include "worker_portal/partials/shift_options.html" %}
+    {% include "worker_portal/partials/status_options.html" %}
+    {% include "worker_portal/partials/location_actions.html" %}
+    {% include "worker_portal/partials/time_actions.html" %}
+  </section>
+{% endblock %}

@@ -1,0 +1,9 @@
+from django.urls import path
+
+from worker_portal import views
+
+urlpatterns = [
+    path("worker/", views.login_view, name="worker-login"),
+    path("worker/login/", views.worker_login, name="worker-login-submit"),
+    path("worker/service-worker.js", views.service_worker, name="worker-service-worker"),
+]

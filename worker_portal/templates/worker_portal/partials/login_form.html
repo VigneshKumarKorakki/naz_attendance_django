@@ -1,0 +1,34 @@
+<form
+  class="form"
+  data-form="login"
+  data-login-url="{% url 'worker-login-submit' %}"
+>
+  {% csrf_token %}
+  <label>
+    <span data-i18n="auth.mobile">Your Mobile Number</span>
+    <input
+      type="tel"
+      name="login"
+      inputmode="numeric"
+      placeholder="051 2345678"
+      data-i18n-placeholder="auth.mobile_placeholder"
+      autocomplete="tel"
+      required
+    />
+  </label>
+  <label>
+    <span data-i18n="auth.password">Password</span>
+    <input
+      type="password"
+      name="password"
+      placeholder="••••••"
+      data-i18n-placeholder="auth.password_placeholder"
+      autocomplete="current-password"
+      required
+    />
+  </label>
+  <p class="error" data-i18n="auth.error" hidden>
+    Code or Password Incorrect — Try Again
+  </p>
+  <button class="cta" type="submit" data-i18n="auth.login">Login</button>
+</form>
