@@ -15,8 +15,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Environment
+<!-- ## Environment -->
 
+<!--
 Set environment variables (example for dev):
 
 ```bash
@@ -25,7 +26,7 @@ export DB_USER=attendance
 export DB_PASSWORD=attendance
 export DB_HOST=localhost
 export DB_PORT=5432
-```
+``` -->
 
 ## Database Setup (PostgreSQL)
 
