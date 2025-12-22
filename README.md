@@ -37,6 +37,12 @@ CREATE DATABASE devattendance OWNER attendance;
 GRANT ALL PRIVILEGES ON DATABASE devattendance TO attendance;
 ```
 
+Quick verify (optional):
+
+```bash
+psql -h localhost -U attendance -d devattendance
+```
+
 ## Migrations
 
 ```bash
@@ -49,6 +55,8 @@ python manage.py migrate
 ```bash
 python manage.py runserver
 ```
+
+Worker portal: `http://localhost:8000/worker/`
 
 ## Admin
 
