@@ -5,30 +5,50 @@
       <p class="stage-subtitle">Mark daily status after shift selection</p>
     </div>
   </div>
-  <button class="option-btn wide" type="button" data-select-group="attendance">
-    🙋‍♂️ <span data-i18n="dash.present">Present</span>
-  </button>
-  <div class="option-grid two">
-    <button class="option-btn" type="button" data-select-group="attendance">
+  <div class="option-grid two attendance-primary">
+    <button
+      class="option-btn"
+      type="button"
+      data-select-group="attendance-primary"
+      data-attendance-primary="present"
+    >
+      🙋‍♂️ <span data-i18n="dash.present">Present</span>
+    </button>
+    <button
+      class="option-btn"
+      type="button"
+      data-select-group="attendance-primary"
+      data-attendance-primary="absent"
+    >
       🚫 <span data-i18n="dash.absent">Absent</span>
     </button>
-    <button class="option-btn" type="button" data-select-group="attendance">
-      🤒 <span data-i18n="dash.sick">Sick</span>
-    </button>
   </div>
-  <div class="option-grid two">
-    <button class="option-btn" type="button" data-select-group="attendance">
-      ❌ <span data-i18n="dash.site_out">Site Out</span>
-    </button>
-    <button class="option-btn" type="button" data-select-group="attendance">
-      🚫 <span data-i18n="dash.no_work">No Work</span>
-    </button>
-  </div>
-  <div class="option-grid two">
-    <button class="option-btn" type="button" data-select-group="attendance">
-      🦺 <span data-i18n="dash.safety">Safety</span>
-    </button>
-    <button class="option-btn" type="button" data-select-group="attendance">
+  <div class="attendance-secondary hidden" data-attendance-secondary>
+    <div class="option-grid two">
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        🤒 <span data-i18n="dash.sick">Sick</span>
+      </button>
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        🚌 <span data-i18n="dash.no_bus">No Bus</span>
+      </button>
+    </div>
+    <div class="option-grid two">
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        🚍 <span data-i18n="dash.missed_bus">Missed Bus</span>
+      </button>
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        ❌ <span data-i18n="dash.site_out">Site Out</span>
+      </button>
+    </div>
+    <div class="option-grid two">
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        🚫 <span data-i18n="dash.no_work">No Work</span>
+      </button>
+      <button class="option-btn" type="button" data-select-group="attendance-secondary">
+        🦺 <span data-i18n="dash.safety_induction">Safety Induction</span>
+      </button>
+    </div>
+    <button class="option-btn wide" type="button" data-select-group="attendance-secondary">
       📚 <span data-i18n="dash.training">Training</span>
     </button>
   </div>

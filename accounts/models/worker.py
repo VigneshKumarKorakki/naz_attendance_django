@@ -22,7 +22,6 @@ class Worker(BaseModel):
         blank=True,
         limit_choices_to={"is_self": True},
     )
-    full_name = models.CharField(max_length=255)
     emirates_id = models.CharField(max_length=100, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     whatsapp_number = models.CharField(max_length=30, blank=True)
@@ -32,7 +31,10 @@ class Worker(BaseModel):
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return self.full_name
+        if self.user_id:
+            full_name = self.user.get_full_name().strip()
+            return full_name or self.user.get_username()
+        return self.employee_code or "Worker"
 
     def clean(self) -> None:
         if self.user_id is None or self.company_id is None:

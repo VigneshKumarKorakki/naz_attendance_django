@@ -20,14 +20,14 @@ class OwnerAdmin(admin.ModelAdmin):
 
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "company", "is_active", "created", "modified")
-    search_fields = ("full_name", "employee_code", "company__name")
+    list_display = ("user", "company", "employee_code", "is_active", "created", "modified")
+    search_fields = ("user__username", "user__email", "employee_code", "company__name")
 
 
 @admin.register(Worker)
 class WorkerAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "company", "is_active", "created", "modified")
-    search_fields = ("full_name", "employee_code", "company__name")
+    list_display = ("user", "company", "employee_code", "is_active", "created", "modified")
+    search_fields = ("user__username", "user__email", "employee_code", "company__name")
 
 
 @admin.register(Company)

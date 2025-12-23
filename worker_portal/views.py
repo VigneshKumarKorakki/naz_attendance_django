@@ -1,10 +1,12 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from accounts.models.worker import Worker
 
+@ensure_csrf_cookie
 def login_view(request):
     return render(request, "worker_portal/index.html")
 
@@ -22,8 +24,14 @@ def worker_login(request):
 
     login(request, user)
     worker = Worker.objects.filter(user=user).first()
-    display_name = (worker.full_name if worker else None) or user.get_full_name() or user.get_username()
+    display_name = (str(worker) if worker else None) or user.get_full_name() or user.get_username()
     return JsonResponse({"ok": True, "name": display_name})
+
+
+@require_POST
+def worker_logout(request):
+    logout(request)
+    return JsonResponse({"ok": True})
 
 
 def service_worker(request):

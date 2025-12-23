@@ -20,12 +20,14 @@ class Staff(BaseModel):
         related_name="staffs",
         limit_choices_to={"is_self": True},
     )
-    full_name = models.CharField(max_length=255)
     employee_code = models.CharField(max_length=50, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return self.full_name
+        if self.user_id:
+            full_name = self.user.get_full_name().strip()
+            return full_name or self.user.get_username()
+        return self.employee_code or "Staff"
 
     def clean(self) -> None:
         if self.user_id is None or self.company_id is None:
