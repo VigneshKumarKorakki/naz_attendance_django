@@ -1,64 +1,125 @@
-<form class="form hidden" data-form="register">
+<form class="form hidden" data-form="register" >
+  <!-- Full Name -->
   <label>
-    <span data-i18n="reg.full_name">Your Full Name</span>
+    <span>Your Full Name</span>
     <input
       type="text"
       name="full_name"
+      required
+      pattern="[A-Za-z ]{2,50}"
       placeholder="Jack Martin"
-      data-i18n-placeholder="reg.full_name_placeholder"
-      autocomplete="name"
     />
+    <p class="error" hidden>
+      Full name should contain only letters and spaces (2–50 characters).
+    </p>
   </label>
+
+  <!-- Emirates ID -->
   <label>
-    <span data-i18n="reg.emirates_id">Emirates ID</span>
+    <span>Emirates ID</span>
     <input
       type="text"
       name="emirates_id"
-      placeholder="Etisal Technical Services LLC"
-      data-i18n-placeholder="reg.emirates_id_placeholder"
+      required
+      pattern="[A-Za-z0-9]{5,20}"
+      placeholder="784199123456789"
     />
+    <p class="error" hidden>
+      Emirates ID must be 5–20 alphanumeric characters.
+    </p>
   </label>
+
+  <!-- Date of Birth -->
   <label>
-    <span data-i18n="reg.dob">Date of Birth</span>
+    <span>Date of Birth</span>
     <input
       type="date"
       name="date_of_birth"
-      placeholder="10-Oct-2000"
-      data-i18n-placeholder="reg.dob_placeholder"
-      inputmode="numeric"
+      required
     />
+    <p class="error" hidden>
+      Please select your date of birth.
+    </p>
   </label>
+
+  <!-- WhatsApp Number -->
   <label>
-    <span data-i18n="reg.whatsapp">Your WhatsApp Number</span>
+    <span>Your WhatsApp Number</span>
     <input
       type="tel"
       name="whatsapp_number"
-      inputmode="numeric"
-      placeholder="123456789"
-      data-i18n-placeholder="reg.whatsapp_placeholder"
-      autocomplete="tel"
+      required
+      pattern="[0-9]{7,15}"
+      placeholder="971501234567"
     />
+    <p class="error" hidden>
+      Enter a valid WhatsApp number (7–15 digits).
+    </p>
   </label>
+
+  <!-- Company Name -->
   <label>
-    <span data-i18n="reg.company_name">Your Company Name</span>
+    <span>Your Company Name</span>
     <input
       type="text"
       name="company_name"
-      placeholder="Company Name"
-      data-i18n-placeholder="reg.company_name_placeholder"
+      required
+      minlength="2"
     />
+    <p class="error" hidden>
+      Company name must be at least 2 characters.
+    </p>
   </label>
+
+  <!-- Company Phone -->
   <label>
-    <span data-i18n="reg.company_phone">Your Company Phone Number</span>
+    <span>Your Company Phone Number</span>
     <input
       type="tel"
       name="company_phone"
-      inputmode="numeric"
+      required
+      pattern="[0-9]{7,15}"
       placeholder="987654321"
-      data-i18n-placeholder="reg.company_phone_placeholder"
     />
+    <p class="error" hidden>
+      Enter a valid company phone number (7–15 digits).
+    </p>
   </label>
+
   <button class="cta" type="submit">
-    <span data-i18n="reg.generate">Generate User Name &amp; Password</span>
+    Generate User Name &amp; Password
   </button>
 </form>
+
+<script>
+const form = document.querySelector('form[data-form="register"]');
+
+form.querySelectorAll('input').forEach(input => {
+  input.addEventListener('input', () => {
+    const error = input.nextElementSibling;
+
+    if (input.checkValidity()) {
+      error.hidden = true;
+    } else {
+      error.hidden = false;
+    }
+  });
+});
+
+form.addEventListener('submit', e => {
+  let isValid = true;
+
+  form.querySelectorAll('input').forEach(input => {
+    const error = input.nextElementSibling;
+
+    if (!input.checkValidity()) {
+      error.hidden = false;
+      isValid = false;
+    } else {
+      error.hidden = true;
+    }
+  });
+
+  if (!isValid) e.preventDefault();
+});
+</script>
