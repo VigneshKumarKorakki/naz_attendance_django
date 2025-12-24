@@ -11,7 +11,6 @@ class Shift(BaseModel):
     class ShiftType(models.TextChoices):
         DAY = "day", "Day"
         NIGHT = "night", "Night"
-        OT = "ot", "Over Time"
 
     class Status(models.TextChoices):
         PRESENT = "present", "Present"
@@ -22,29 +21,15 @@ class Shift(BaseModel):
         SAFETY = "safety", "Safety"
         TRAINING = "training", "Training"
 
-    worker = models.ForeignKey(
-        Worker,
-        on_delete=models.CASCADE,
-        related_name="attendances",
-        null=True,
-        blank=True,
-    )
-    staff = models.ForeignKey(
-        Staff,
-        on_delete=models.CASCADE,
-        related_name="attendances",
-        null=True,
-        blank=True,
-    )
     attendance_date = models.DateField()
     shift_type = models.CharField(max_length=10, choices=ShiftType.choices)
     status = models.CharField(max_length=20, choices=Status.choices)
     start_date_time = models.DateTimeField(null=True, blank=True)
     end_date_time = models.DateTimeField(null=True, blank=True)
-    worker_start_date = models.DateField(null=True, blank=True)
-    worker_end_date = models.DateField(null=True, blank=True)
-    staff_start_date = models.DateField(null=True, blank=True)
-    staff_end_date = models.DateField(null=True, blank=True)
+    worker_start_date_time = models.DateTimeField(null=True, blank=True)
+    worker_end_date_time = models.DateTimeField(null=True, blank=True)
+    staff_start_date_time = models.DateTimeField(null=True, blank=True)
+    staff_end_date_time = models.DateTimeField(null=True, blank=True)
     recorded_by_worker = models.ForeignKey(
         Worker,
         on_delete=models.SET_NULL,
@@ -63,17 +48,17 @@ class Shift(BaseModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["worker", "attendance_date"],
-                condition=Q(worker__isnull=False),
+                fields=["recorded_by_worker", "attendance_date"],
+                condition=Q(recorded_by_worker__isnull=False),
                 name="uniq_attendance_worker_date",
             ),
             models.UniqueConstraint(
-                fields=["staff", "attendance_date"],
-                condition=Q(staff__isnull=False),
+                fields=["recorded_by_staff", "attendance_date"],
+                condition=Q(recorded_by_staff__isnull=False),
                 name="uniq_attendance_staff_date",
             ),
         ]
-        ordering = ["-attendance_date", "worker"]
+        ordering = ["-attendance_date", "recorded_by_worker", "recorded_by_staff"]
 
     def __str__(self) -> str:
         if self.worker_id:
@@ -88,30 +73,86 @@ class Shift(BaseModel):
         if not self.worker_id and not self.staff_id:
             raise ValidationError("Attendance must be linked to a worker or staff.")
 
+    def save(self, *args, **kwargs):
+        previous = None
+        if self.pk:
+            previous = (
+                Shift.objects.filter(pk=self.pk)
+                .values(
+                    "attendance_date",
+                    "shift_type",
+                    "status",
+                    "start_date_time",
+                    "end_date_time",
+                    "worker_start_date_time",
+                    "worker_end_date_time",
+                    "staff_start_date_time",
+                    "staff_end_date_time",
+                    "recorded_by_worker_id",
+                    "recorded_by_staff_id",
+                )
+                .first()
+            )
+        super().save(*args, **kwargs)
+        if not previous:
+            return
+        current = {
+            "attendance_date": self.attendance_date,
+            "shift_type": self.shift_type,
+            "status": self.status,
+            "start_date_time": self.start_date_time,
+            "end_date_time": self.end_date_time,
+            "worker_start_date_time": self.worker_start_date_time,
+            "worker_end_date_time": self.worker_end_date_time,
+            "staff_start_date_time": self.staff_start_date_time,
+            "staff_end_date_time": self.staff_end_date_time,
+        }
+        if any(previous[key] != current[key] for key in current):
+            ShiftAudit.objects.create(
+                shift=self,
+                recorded_by_worker_id=previous["recorded_by_worker_id"],
+                recorded_by_staff_id=previous["recorded_by_staff_id"],
+                attendance_date=previous["attendance_date"],
+                shift_type=previous["shift_type"],
+                status=previous["status"],
+                start_date_time=previous["start_date_time"],
+                end_date_time=previous["end_date_time"],
+                worker_start_date_time=previous["worker_start_date_time"],
+                worker_end_date_time=previous["worker_end_date_time"],
+                staff_start_date_time=previous["staff_start_date_time"],
+                staff_end_date_time=previous["staff_end_date_time"],
+            )
 
-class ShiftChange(BaseModel):
+
+class ShiftAudit(BaseModel):
     shift = models.ForeignKey(
         Shift,
         on_delete=models.CASCADE,
         related_name="changes",
     )
-    changed_by_worker = models.ForeignKey(
+    recorded_by_worker = models.ForeignKey(
         Worker,
         on_delete=models.SET_NULL,
-        related_name="shift_changes",
+        related_name="shift_audits",
         null=True,
         blank=True,
     )
-    changed_by_staff = models.ForeignKey(
+    recorded_by_staff = models.ForeignKey(
         Staff,
         on_delete=models.SET_NULL,
-        related_name="shift_changes",
+        related_name="shift_audits",
         null=True,
         blank=True,
     )
+    attendance_date = models.DateField()
+    shift_type = models.CharField(max_length=10, choices=Shift.ShiftType.choices)
     status = models.CharField(max_length=20, choices=Shift.Status.choices)
     start_date_time = models.DateTimeField(null=True, blank=True)
     end_date_time = models.DateTimeField(null=True, blank=True)
+    worker_start_date_time = models.DateTimeField(null=True, blank=True)
+    worker_end_date_time = models.DateTimeField(null=True, blank=True)
+    staff_start_date_time = models.DateTimeField(null=True, blank=True)
+    staff_end_date_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created"]
