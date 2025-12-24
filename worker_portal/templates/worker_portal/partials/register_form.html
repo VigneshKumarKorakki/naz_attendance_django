@@ -1,16 +1,31 @@
-<form class="form hidden" data-form="register" >
-  <!-- Full Name -->
+<form class="form hidden" data-form="register" novalidate>
+  <!-- First Name -->
   <label>
-    <span>Your Full Name</span>
+    <span>Your First Name</span>
     <input
       type="text"
-      name="full_name"
+      name="first_name"
       required
-      pattern="[A-Za-z ]{2,50}"
-      placeholder="Jack Martin"
+      pattern="[A-Za-z]{2,50}"
+      placeholder="Jack"
     />
     <p class="error" hidden>
-      Full name should contain only letters and spaces (2–50 characters).
+      First name should contain only letters (2–50 characters).
+    </p>
+  </label>
+
+  <!-- Last Name -->
+  <label>
+    <span>Your Last Name</span>
+    <input
+      type="text"
+      name="last_name"
+      required
+      pattern="[A-Za-z]{2,50}"
+      placeholder="Martin"
+    />
+    <p class="error" hidden>
+      Last name should contain only letters (2–50 characters).
     </p>
   </label>
 
@@ -32,14 +47,21 @@
   <!-- Date of Birth -->
   <label>
     <span>Date of Birth</span>
+    <input type="date" name="date_of_birth" required />
+    <p class="error" hidden>Please select your date of birth.</p>
+  </label>
+
+  <!-- Phone Number (username) -->
+  <label>
+    <span>Your Phone Number</span>
     <input
-      type="date"
-      name="date_of_birth"
+      type="tel"
+      name="phone"
       required
+      pattern="[0-9]{7,15}"
+      placeholder="971501234567"
     />
-    <p class="error" hidden>
-      Please select your date of birth.
-    </p>
+    <p class="error" hidden>Enter a valid phone number (7–15 digits).</p>
   </label>
 
   <!-- WhatsApp Number -->
@@ -52,23 +74,14 @@
       pattern="[0-9]{7,15}"
       placeholder="971501234567"
     />
-    <p class="error" hidden>
-      Enter a valid WhatsApp number (7–15 digits).
-    </p>
+    <p class="error" hidden>Enter a valid WhatsApp number (7–15 digits).</p>
   </label>
 
   <!-- Company Name -->
   <label>
     <span>Your Company Name</span>
-    <input
-      type="text"
-      name="company_name"
-      required
-      minlength="2"
-    />
-    <p class="error" hidden>
-      Company name must be at least 2 characters.
-    </p>
+    <input type="text" name="company_name" required minlength="2" />
+    <p class="error" hidden>Company name must be at least 2 characters.</p>
   </label>
 
   <!-- Company Phone -->
@@ -86,40 +99,246 @@
     </p>
   </label>
 
-  <button class="cta" type="submit">
-    Generate User Name &amp; Password
-  </button>
+  <button class="cta" type="submit">Generate User Name &amp; Password</button>
 </form>
 
+<!-- Single modal for success + error -->
+<div id="modal" class="modal" style="display: none">
+  <div class="modal-content">
+    <span id="close-modal" class="close">&times;</span>
+    <h3 id="modal-title">Status</h3>
+
+    <!-- success block -->
+    <div id="modal-success" style="display: none">
+      <p style="color: green" id="modal-success-text"></p>
+
+      <!-- Plain values -->
+      <p><strong>Your Name:</strong> <span id="success-name"></span></p>
+      <p>
+        <strong>Your WhatsApp Number:</strong>
+        <span id="success-whatsapp"></span>
+      </p>
+
+      <!-- Visual explanation of password rule -->
+      <p style="margin-top: 10px">
+        Your password is:
+        <br />
+        <strong>
+          First letter of your name:
+          <span id="pw-name-first" style="color: blue"></span>
+        </strong>
+        +
+        <strong>
+          Last 4 digits of your WhatsApp number:
+          <span id="pw-whatsapp-last4" style="color: #d9534f"></span>
+        </strong>
+      </p>
+
+      <!-- Final credentials -->
+      <p style="margin-top: 10px">
+        <strong>Username:</strong> <span id="modal-username"></span><br />
+        <strong>Password:</strong> <span id="modal-password"></span>
+      </p>
+    </div>
+
+    <!-- error block -->
+    <p id="modal-error" style="color: red; display: none"></p>
+  </div>
+</div>
+
+<style>
+  .highlight-name {
+    font-weight: bold;
+    color: blue;
+  }
+
+  .highlight-phone {
+    font-weight: bold;
+    color: #d9534f; /* red */
+  }
+
+  .modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+  .modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    width: 480px; /* increased */
+    max-width: 90%; /* stays responsive on small screens */
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+
 <script>
-const form = document.querySelector('form[data-form="register"]');
+  const form = document.querySelector('form[data-form="register"]');
 
-form.querySelectorAll('input').forEach(input => {
-  input.addEventListener('input', () => {
-    const error = input.nextElementSibling;
+  if (form) {
+    // Real-time validation
+    form.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const error = input.nextElementSibling;
+        error.hidden = input.checkValidity();
+      });
+    });
 
-    if (input.checkValidity()) {
-      error.hidden = true;
-    } else {
-      error.hidden = false;
+    // Modal elements
+    const modal = document.getElementById("modal");
+    const closeModal = document.getElementById("close-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalUsername = document.getElementById("modal-username");
+    const modalPassword = document.getElementById("modal-password");
+    const modalSuccess = document.getElementById("modal-success");
+    const modalSuccessText = document.getElementById("modal-success-text");
+    const modalError = document.getElementById("modal-error");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      let isValid = true;
+
+      form.querySelectorAll("input").forEach((input) => {
+        const error = input.nextElementSibling;
+        if (!input.checkValidity()) {
+          error.hidden = false;
+          isValid = false;
+        } else {
+          error.hidden = true;
+        }
+      });
+
+      if (!isValid) return;
+
+      const firstName = form.first_name.value.trim();
+      const lastName = form.last_name.value.trim();
+      const phoneNumber = form.phone.value.trim();
+      const whatsappNumber = form.whatsapp_number.value.trim();
+
+      // username = phone number
+      const username = phoneNumber;
+
+      // password = first letter of first name + last 4 digits of WhatsApp
+      const password =
+        firstName.charAt(0).toUpperCase() + whatsappNumber.slice(-4);
+
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        emirates_id: form.emirates_id.value.trim(),
+        date_of_birth: form.date_of_birth.value,
+        phone: phoneNumber,
+        whatsapp_number: whatsappNumber,
+        company_name: form.company_name.value.trim(),
+        company_phone: form.company_phone.value.trim(),
+        username: username,
+        password: password,
+      };
+      console.log("Payload:", payload);
+
+      try {
+        const resp = await fetch("/worker/register/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+
+        // reset modal state
+        modalError.style.display = "none";
+        modalSuccess.style.display = "none";
+
+        if (!resp.ok || !data.ok) {
+          modalTitle.textContent = "Registration Failed";
+          modalError.textContent =
+            data.message || "Failed to save worker details.";
+          modalError.style.display = "block";
+          modal.style.display = "block";
+          return;
+        }
+
+        // after successful response
+        const fullNameForDisplay = `${firstName} ${lastName}`.trim();
+        const firstLetter = firstName.charAt(0).toUpperCase();
+        const last4 = whatsappNumber.slice(-4);
+
+        document.getElementById("success-name").textContent =
+          fullNameForDisplay;
+        document.getElementById("success-whatsapp").textContent =
+          whatsappNumber;
+
+        document.getElementById("pw-name-first").textContent = firstLetter;
+        document.getElementById("pw-whatsapp-last4").textContent = last4;
+
+        modalTitle.textContent = "Registration Success";
+
+        // Name: highlight first letter
+        document.getElementById("success-name").innerHTML = `
+  <span class="highlight-name">${firstName
+    .charAt(0)
+    .toUpperCase()}</span>${firstName.slice(1)}
+`;
+
+        // WhatsApp: highlight last 4 digit
+        document.getElementById("success-whatsapp").innerHTML = `
+  ${whatsappNumber.slice(
+    0,
+    -4
+  )}<span class="highlight-phone">${whatsappNumber.slice(-4)}</span>
+`;
+
+        modalSuccessText.textContent =
+          "Please remember your username and password. The password is made from your name and WhatsApp number.";
+
+        modalUsername.textContent = username; // phone number
+        modalPassword.textContent = password; // firstLetter + last4
+
+        modalError.style.display = "none";
+        modalSuccess.style.display = "block";
+        modal.style.display = "block";
+      } catch (err) {
+        console.error(err);
+        modalTitle.textContent = "Error";
+        modalError.textContent = "Something went wrong. Please try again.";
+        modalError.style.display = "block";
+        modalSuccess.style.display = "none";
+        modal.style.display = "block";
+      }
+    });
+
+    if (closeModal) {
+      closeModal.addEventListener("click", () => {
+        modal.style.display = "none";
+      });
     }
-  });
-});
 
-form.addEventListener('submit', e => {
-  let isValid = true;
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+  }
 
-  form.querySelectorAll('input').forEach(input => {
-    const error = input.nextElementSibling;
-
-    if (!input.checkValidity()) {
-      error.hidden = false;
-      isValid = false;
-    } else {
-      error.hidden = true;
-    }
-  });
-
-  if (!isValid) e.preventDefault();
-});
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
 </script>
