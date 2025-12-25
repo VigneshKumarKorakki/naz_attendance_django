@@ -1,0 +1,7 @@
+POST {{baseUrl}}/api/{{apiVersion}}/owner/login/
+Content-Type: application/json
+
+{
+  "login": "{{ownerLogin}}",
+  "password": "{{ownerPassword}}"
+}
