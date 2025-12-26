@@ -4,11 +4,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.models.staff import Staff
+from accounts.models.owner import Owner
 from core.responses import api_response
 
 
-class StaffLoginSerializer(serializers.Serializer):
+class OwnerLoginSerializer(serializers.Serializer):
     login = serializers.CharField(required=False, allow_blank=True)
     username = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
@@ -22,10 +22,10 @@ class StaffLoginSerializer(serializers.Serializer):
         return attrs
 
 
-class StaffLoginView(APIView):
+class OwnerLoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
-    serializer_class = StaffLoginSerializer
+    serializer_class = OwnerLoginSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -47,29 +47,28 @@ class StaffLoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        staff = Staff.objects.filter(user=user).select_related("company").first()
-        if staff is None or not staff.is_active:
+        owner = Owner.objects.filter(user=user).select_related("user").first()
+        if owner is None:
             return api_response(
                 ok=False,
-                message="Staff access denied",
+                message="Owner access denied",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         login(request, user)
         refresh = RefreshToken.for_user(user)
-        refresh["role"] = "staff"
+        refresh["role"] = "owner"
         access = refresh.access_token
-        access["role"] = "staff"
-        display_name = (str(staff) if staff else None) or user.get_full_name() or user.get_username()
+        access["role"] = "owner"
+        display_name = owner.user.get_full_name() or owner.user.get_username()
         return api_response(
             ok=True,
             message="Login success",
             data={
                 "name": display_name,
-                "staff_id": staff.id,
-                "company_id": staff.company_id,
+                "owner_id": owner.id,
                 "refresh": str(refresh),
                 "access": str(access),
-                "role": "staff",
+                "role": "owner",
             },
         )

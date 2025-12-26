@@ -19,5 +19,4 @@ coverage/
 .mypy_cache/
 .ruff_cache/
 .idea/
-.vscode/
 *.swp

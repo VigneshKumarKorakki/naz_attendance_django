@@ -1,0 +1,51 @@
+# @name staffLogin
+POST {{baseUrl}}/api/{{apiVersion}}/staff/login/
+Content-Type: application/json
+
+{
+  "login": "{{staffUsername}}",
+  "password": "{{staffPassword}}"
+}
+
+### @name updateShift
+PATCH {{baseUrl}}/api/{{apiVersion}}/staff/shifts/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+Content-Type: application/json
+
+{
+  "attendance_date": "2025-12-26",
+  "shift_type": "day",
+  "status": "present",
+  "hours": 8,
+  "staff_start_date_time": "2025-12-26T09:00:00Z",
+  "staff_end_date_time": "2025-12-26T17:00:00Z"
+}
+
+### @name absentShift
+PATCH {{baseUrl}}/api/{{apiVersion}}/staff/shifts/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+Content-Type: application/json
+
+{
+  "attendance_date": "2025-12-27",
+  "shift_type": "day",
+  "status": "absent",
+  "absence_reason": "sick",
+  "hours": 0
+}
+
+@shiftId=2edda40d-b5eb-49d5-a718-c27683164589
+
+### @name listShifts
+GET {{baseUrl}}/api/{{apiVersion}}/staff/shifts/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+
+### @name getShift
+GET {{baseUrl}}/api/{{apiVersion}}/staff/shifts/{{shiftId}}/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+
+### @name deleteShift
+DELETE {{baseUrl}}/api/{{apiVersion}}/staff/shifts/{{shiftId}}/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+
+

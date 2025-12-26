@@ -1,7 +1,16 @@
+# @name staffLogin
 POST {{baseUrl}}/api/{{apiVersion}}/staff/login/
 Content-Type: application/json
 
 {
-  "login": "{{staffLogin}}",
+  "login": "{{staffUsername}}",
   "password": "{{staffPassword}}"
+}
+
+###
+POST {{baseUrl}}/api/{{apiVersion}}/token/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "{{staffLogin.response.body.data.refresh}}"
 }
