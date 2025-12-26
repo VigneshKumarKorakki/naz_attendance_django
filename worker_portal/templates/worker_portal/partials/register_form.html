@@ -249,7 +249,7 @@
         username: username,
         password: password,
       };
-      console.log("Payload:", payload);
+      debugLog("Payload:", payload);
 
       try {
         const resp = await fetch("/worker/register/", {
