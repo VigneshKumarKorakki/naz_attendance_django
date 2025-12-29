@@ -1,12 +1,70 @@
 <section class="block">
   <p class="section-title" data-i18n="dash.select_attendance">Select Attendance</p>
   <div class="date-card">
-    <button class="nav-btn" type="button" aria-label="Previous day">&lt;</button>
+    <button class="nav-btn" id="prev-day" type="button" aria-label="Previous day">&lt;</button>
     <div class="date-info">
-      <div class="day">Thursday</div>
-      <div class="date">11-Dec-2025</div>
-      <div class="time">07:30 am</div>
+      <div class="day" id="display-day-name"></div>
+      <div class="date" id="display-date-text"></div>
     </div>
-    <button class="nav-btn" type="button" aria-label="Next day">&gt;</button>
+    <button class="nav-btn" id="next-day" type="button" aria-label="Next day">&gt;</button>
   </div>
 </section>
+
+<script>
+  (function() {
+    let currentDate = new Date();
+    
+    const dayEl = document.getElementById("display-day-name");
+    const dateEl = document.getElementById("display-date-text");
+    const prevBtn = document.getElementById("prev-day");
+    const nextBtn = document.getElementById("next-day");
+
+    function formatDate(date) {
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      
+      const dayName = days[date.getDay()];
+      const dayNum = String(date.getDate()).padStart(2, "0");
+      const monthName = months[date.getMonth()];
+      const year = date.getFullYear();
+
+      return {
+        dayName: dayName,
+        dateStr: `${dayNum}-${monthName}-${year}`
+      };
+    }
+
+    function updateDisplay() {
+      const fmt = formatDate(currentDate);
+      dayEl.textContent = fmt.dayName;
+      dateEl.textContent = fmt.dateStr;
+      
+      const monthIndex = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const dayIndex = String(currentDate.getDate()).padStart(2, "0");
+      const payloadDate = `${currentDate.getFullYear()}-${monthIndex}-${dayIndex}`;
+      window.dispatchEvent(
+        new CustomEvent("attendance:date-changed", {
+          detail: {
+            displayDate: fmt.dateStr,
+            formattedDate: payloadDate,
+            date: new Date(currentDate),
+          },
+        })
+      );
+    }
+
+    // Initialize
+    updateDisplay();
+
+    prevBtn.addEventListener("click", () => {
+      currentDate.setDate(currentDate.getDate() - 1);
+      updateDisplay();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentDate.setDate(currentDate.getDate() + 1);
+      updateDisplay();
+    });
+
+  })();
+</script>

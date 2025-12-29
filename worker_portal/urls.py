@@ -8,4 +8,5 @@ urlpatterns = [
     path("worker/logout/", views.worker_logout, name="worker-logout"),
     path("worker/service-worker.js", views.service_worker, name="worker-service-worker"),
     path("worker/register/", views.worker_register, name="worker-register"),
+    path("worker/shift-upsert/", views.worker_shift_upsert, name="worker-shift-upsert"),
 ]

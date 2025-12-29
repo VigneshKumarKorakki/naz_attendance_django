@@ -1,5 +1,49 @@
-<section class="block">
-  <button class="cta alt" type="button" data-i18n="dash.location">
+<section class="block" data-stage="location">
+  <button class="cta alt" type="button" id="get-location-btn" data-i18n="dash.location">
     Get My Site Location
   </button>
+  <p id="location-status" style="margin-top: 5px; font-size: 0.9em; color: gray;"></p>
 </section>
+
+<script>
+  window.workerLocation = null;
+
+  const locBtn = document.getElementById("get-location-btn");
+  const locStatus = document.getElementById("location-status");
+
+  if (locBtn) {
+    locBtn.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        showToast("Geolocation is not supported by your browser", "error");
+        return;
+      }
+
+      locStatus.textContent = "Locating...";
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          window.workerLocation = { latitude, longitude };
+          locStatus.textContent = `Location set: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          locStatus.style.color = "green";
+
+          const startWorkBtn = document.getElementById("btn-start-work");
+          const endWorkBtn = document.getElementById("btn-end-work");
+          const hasStart = Boolean(startWorkBtn?.dataset.startTime);
+          const hasEnd = Boolean(endWorkBtn?.dataset.endTime);
+          if (startWorkBtn && !hasStart) {
+            startWorkBtn.disabled = false;
+          }
+          if (endWorkBtn && hasStart && !hasEnd) {
+            endWorkBtn.disabled = false;
+          }
+        },
+        (error) => {
+          console.error(error);
+          locStatus.textContent = "Unable to retrieve location.";
+          locStatus.style.color = "red";
+        }
+      );
+    });
+  }
+</script>
