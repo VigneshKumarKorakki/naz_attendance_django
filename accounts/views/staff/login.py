@@ -9,15 +9,15 @@ from core.responses import api_response
 
 
 class StaffLoginSerializer(serializers.Serializer):
-    login = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
     username = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     password = serializers.CharField(required=True)
 
     def validate(self, attrs):
-        resolved_login = attrs.get("login") or attrs.get("username") or attrs.get("email")
+        resolved_login = attrs.get("phone") or attrs.get("username") or attrs.get("email")
         if not resolved_login:
-            raise serializers.ValidationError({"login": "Login is required."})
+            raise serializers.ValidationError({"phone": "Phone is required."})
         attrs["resolved_login"] = resolved_login
         return attrs
 

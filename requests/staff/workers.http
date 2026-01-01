@@ -1,0 +1,20 @@
+# @name staffLogin
+POST {{baseUrl}}/api/{{apiVersion}}/staff/login/
+Content-Type: application/json
+
+{
+  "phone": "{{staffPhone}}",
+  "password": "{{staffPassword}}"
+}
+
+###
+# @name staffWorkersList
+GET {{baseUrl}}/api/{{apiVersion}}/staff/workers/
+Authorization: Bearer {{staffLogin.response.body.data.access}}
+
+@workerId = {{staffWorkersList.response.body.data[0].worker_id}}
+
+###
+# @name staffWorkerDetail
+GET {{baseUrl}}/api/{{apiVersion}}/staff/workers/{{workerId}}/
+Authorization: Bearer {{staffLogin.response.body.data.access}}

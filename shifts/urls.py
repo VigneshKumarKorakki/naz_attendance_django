@@ -31,4 +31,10 @@ urlpatterns = [
         name="worker-attendance-history",
     )
 
+    path("api/v1/staff/workers/", StaffWorkerListView.as_view(), name="staff-worker-list"),
+    path(
+        "api/v1/staff/workers/<uuid:worker_id>/",
+        StaffWorkerDetailView.as_view(),
+        name="staff-worker-detail",
+    ),
 ]

@@ -21,6 +21,12 @@ DEBUG = True  # noqa
 # ALLOWED_HOSTS = ["localhost", "127.0.0.1", "naz.localhost"]  # noqa
 ALLOWED_HOSTS = []  # noqa
 
+# CORS settings for local frontend dev
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 # Static file settings for development (local)
 STATIC_ROOT = BASE_DIR / "core" / "staticfiles"  # noqa
 STATIC_URL = "/static/"  # noqa
