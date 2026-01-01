@@ -1,0 +1,41 @@
+<section class="block card history-view hidden" id="section-attendance-history">
+  <div class="stage-header">
+    <div>
+      <p class="stage-title" data-i18n="dash.attendance_history">Attendance History</p>
+    </div>
+  </div>
+  
+  <div class="month-navigator">
+    <button class="nav-btn" id="prev-month">&lt;</button>
+    <div class="month-display" id="current-month-display">December 2025</div>
+    <button class="nav-btn" id="next-month">&gt;</button>
+  </div>
+
+  <div class="calendar-grid" id="calendar-grid">
+    <!-- Days of week -->
+    <div class="dow" data-i18n="day.sun">SUN</div>
+    <div class="dow" data-i18n="day.mon">MON</div>
+    <div class="dow" data-i18n="day.tue">TUE</div>
+    <div class="dow" data-i18n="day.wed">WED</div>
+    <div class="dow" data-i18n="day.thu">THU</div>
+    <div class="dow" data-i18n="day.fri">FRI</div>
+    <div class="dow" data-i18n="day.sat">SAT</div>
+    <!-- Days will be injected here -->
+  </div>
+
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <span class="tick black">✔</span>
+      <span data-i18n="dash.my_attendance">Black Tick = Worker Attendance - Present</span>
+    </div>
+        <div class="legend-item">
+      <span class="tick red">✖</span>
+      <span data-i18n="dash.absent_marking">Red Cross = Worker Attendance - Absent</span>
+    </div>
+    <div class="legend-item">
+      <span class="tick green">✔</span>
+      <span data-i18n="dash.staff_attendance">Green Tick = Staff Attendance</span>
+    </div>
+
+  </div>
+</section>

@@ -1,13 +1,382 @@
-<section class="block">
+<section class="block" data-stage="time">
   <p class="section-title muted" data-i18n="dash.system_time">
     System Date &amp; Time
   </p>
-  <button class="cta" type="button" data-i18n="dash.start_work">Start Work</button>
-  <button class="cta secondary" type="button" data-i18n="dash.end_work">End Work</button>
+  <button class="cta" type="button" id="btn-start-work" data-i18n="dash.start_work" disabled>
+    Start Work
+    <span class="cta-subtext" id="start-time-text"></span>
+  </button>
+  <button class="cta secondary" type="button" id="btn-end-work" data-i18n="dash.end_work" disabled>
+    End Work
+    <span class="cta-subtext" id="end-time-text"></span>
+  </button>
   <p class="section-title muted" data-i18n="dash.system_time">
     System Date &amp; Time
   </p>
-  <button class="cta secondary" type="button" data-i18n="dash.timer">
+  <button class="cta secondary" type="button" id="btn-timer" data-i18n="dash.timer" disabled>
     Timer
   </button>
 </section>
+
+<button class="cta alt" type="button" id="btn-view-attendance" data-i18n="dash.view_attendance">
+  View Attendance
+</button>
+
+<script>
+// Encapsulate in DOMContentLoaded to ensure elements exist
+document.addEventListener("DOMContentLoaded", () => {
+  // Timer variables & elements
+  let timerInterval;
+  const timerBtn = document.getElementById("btn-timer");
+  // If elements aren't found, we might be on a partial reload or they don't exist yet? 
+  // But this is inside a partial that is included. 
+  // Ideally, code inside partials is executed when included.
+  // However, `const` at top level of a script in a partial might conflict if partial is loaded multiple times?
+  // Let's use vars or strictly scoped.
+  
+  if (!timerBtn) return; // Exit if elements missing (e.g. partial loaded but id changed)
+
+  let timerStartTime = null;
+  let lastStartIso = null;
+  
+  const timeLabels = document.querySelectorAll(
+    'p.section-title.muted[data-i18n="dash.system_time"]'
+  );
+  const startBtn = document.getElementById("btn-start-work");
+  const endBtn = document.getElementById("btn-end-work");
+  const startTimeText = document.getElementById("start-time-text");
+  const endTimeText = document.getElementById("end-time-text");
+
+  function getCurrentDateTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  function formatTime(isoString) {
+      const timeValue = new Date(isoString);
+      if (Number.isNaN(timeValue.getTime())) {
+          return "";
+      }
+      return timeValue
+        .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        .toLowerCase();
+  }
+
+  function updateButtonState(startIso, endIso) {
+      if (startBtn) {
+          startBtn.disabled = Boolean(startIso);
+          startBtn.dataset.startTime = startIso || "";
+      }
+      if (endBtn) {
+          endBtn.disabled = !startIso || Boolean(endIso);
+          endBtn.dataset.endTime = endIso || "";
+      }
+  }
+
+  function updateTimeText(startIso, endIso) {
+      if (startTimeText) {
+          startTimeText.textContent = startIso ? `Start: ${formatTime(startIso)}` : "";
+      }
+      if (endTimeText) {
+          endTimeText.textContent = endIso ? `End: ${formatTime(endIso)}` : "";
+      }
+  }
+
+  function startTimerFrom(startIso) {
+      if (!startIso) return;
+      if (timerInterval) clearInterval(timerInterval);
+      timerStartTime = new Date(startIso);
+      if (Number.isNaN(timerStartTime.getTime())) {
+          timerStartTime = null;
+          return;
+      }
+      if (timerBtn) {
+          timerBtn.disabled = false;
+          timerInterval = setInterval(() => {
+              const now = new Date();
+              const diff = Math.max(0, now - timerStartTime);
+              const totalSeconds = Math.floor(diff / 1000);
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600) / 60);
+              const seconds = totalSeconds % 60;
+
+              const hStr = String(hours).padStart(2, '0');
+              const mStr = String(minutes).padStart(2, '0');
+              const sStr = String(seconds).padStart(2, '0');
+
+              timerBtn.textContent = `${hStr}:${mStr}:${sStr}`;
+          }, 1000);
+      }
+  }
+
+  function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (timerBtn) {
+          timerBtn.disabled = false;
+          timerStartTime = new Date();
+          timerBtn.textContent = "00:00:00";
+          
+          timerInterval = setInterval(() => {
+              const now = new Date();
+              const diff = Math.max(0, now - timerStartTime); // ms
+              
+              const totalSeconds = Math.floor(diff / 1000);
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600) / 60);
+              const seconds = totalSeconds % 60;
+              
+              const hStr = String(hours).padStart(2, '0');
+              const mStr = String(minutes).padStart(2, '0');
+              const sStr = String(seconds).padStart(2, '0');
+              
+              timerBtn.textContent = `${hStr}:${mStr}:${sStr}`;
+          }, 1000);
+      }
+  }
+  
+  function stopTimer() {
+      if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          
+          if (timerStartTime && timerBtn) {
+             const now = new Date();
+             const diffMs = now - timerStartTime;
+             const hoursDecimal = (diffMs / (1000 * 60 * 60)).toFixed(2);
+             timerBtn.textContent = `Total: ${hoursDecimal} Hrs`;
+          }
+      }
+  }
+
+  function setTotalHours(startIso, endIso) {
+      if (!timerBtn) return;
+      if (!startIso || !endIso) return;
+      const startTime = new Date(startIso);
+      const endTime = new Date(endIso);
+      if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
+          return;
+      }
+      const diffMs = Math.max(0, endTime - startTime);
+      const hoursDecimal = (diffMs / (1000 * 60 * 60)).toFixed(2);
+      timerBtn.textContent = `Total: ${hoursDecimal} Hrs`;
+      timerBtn.disabled = false;
+  }
+
+  function applyShiftTimes(startIso, endIso) {
+      lastStartIso = startIso || null;
+      updateTimeText(startIso, endIso);
+      updateButtonState(startIso, endIso);
+      
+      if (timeLabels[0]) {
+          timeLabels[0].textContent = startIso ? `Start Time: ${formatTime(startIso)}` : "System Date & Time";
+      }
+      if (timeLabels[1]) {
+          timeLabels[1].textContent = endIso ? `End Time: ${formatTime(endIso)}` : "System Date & Time";
+      }
+      if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+      }
+      if (startIso && !endIso) {
+          startTimerFrom(startIso);
+          return;
+      }
+      if (startIso && endIso) {
+          setTotalHours(startIso, endIso);
+          return;
+      }
+      if (timerBtn) {
+          timerBtn.textContent = "Timer";
+          timerBtn.disabled = true;
+      }
+  }
+
+  function ensureLocation() {
+      if (window.workerLocation) {
+          return true;
+      }
+      showToast("Please set your location before continuing.", "error");
+      const locBtn = document.getElementById("get-location-btn");
+      locBtn?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return false;
+  }
+
+  window.workerTimeUI = {
+      applyShiftTimes,
+  };
+
+  applyShiftTimes(
+      startBtn?.dataset.startTime || null,
+      endBtn?.dataset.endTime || null
+  );
+
+  if (startBtn) {
+      startBtn.addEventListener("click", async () => {
+        // ... (existing start logic) ...
+        if (!ensureLocation()) {
+          return;
+        }
+        // 1. Gather all data
+        const dateText = document.querySelector('.date-info .date')?.textContent.trim();
+        const shiftBtn = document.querySelector('.option-btn[data-select-group="shift"].selected');
+        const statusBtn = document.querySelector('.option-btn[data-select-group="attendance-primary"].selected');
+        
+        // 2. Validate
+        if (!dateText) {
+          showToast("Please select a date.", "error");
+          return;
+        }
+        if (!shiftBtn) {
+          showToast("Please select a valid shift (Day/Night).", "error");
+          return;
+        }
+        const status = statusBtn?.dataset.attendancePrimary || "present";
+        const shiftType = shiftBtn.dataset.shiftType;
+        
+        let absenceReason = null;
+        if (status === "absent") {
+           const reasonBtn = document.querySelector('.option-btn[data-select-group="attendance-secondary"].selected');
+           if (reasonBtn) {
+               const span = reasonBtn.querySelector("span");
+               if (span) {
+                   absenceReason = span.textContent.trim();
+               } else {
+                   absenceReason = reasonBtn.innerText.trim(); 
+               }
+           }
+        }
+        
+        // 3. Format Date
+        const monthMap = {
+          "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
+          "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
+        };
+        const monthIndexMap = {
+          "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+          "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+        };
+        const [day, monthStr, year] = dateText.split("-");
+        const month = monthMap[monthStr];
+        if (!month) {
+          showToast("Invalid date format.", "error");
+          return;
+        }
+        const formattedDate = `${year}-${month}-${day}`;
+
+        if (timeLabels[0]) timeLabels[0].textContent = `Start Time: ${getCurrentDateTime()}`;
+        
+        // 4. Construct Payload
+        const actualNow = new Date();
+        const combinedISO = actualNow.toISOString();
+
+        startTimer();
+        lastStartIso = combinedISO;
+
+        const payload = {
+           attendance_date: formattedDate,
+           shift_type: shiftType,
+           status: status,
+           absence_reason: absenceReason,
+           worker_start_date_time: combinedISO,
+           worker_start_location: window.workerLocation || null
+        };
+        
+        console.log("Starting work with payload:", payload);
+
+        try {
+            const csrfToken = getCookie("csrftoken") || document.querySelector("input[name=csrfmiddlewaretoken]")?.value;
+            const response = await fetch("/worker/shift-upsert/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                showToast("Work started successfully!", "success");
+                if (endBtn) endBtn.disabled = false;
+                applyShiftTimes(combinedISO, null);
+            } else {
+                showToast("Failed to start work: " + (data.message || "Unknown error"), "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Network error.", "error");
+        }
+      });
+  }
+
+  if (endBtn) {
+      endBtn.addEventListener("click", async () => {
+        if (!ensureLocation()) {
+          return;
+        }
+        const dateText = document.querySelector('.date-info .date')?.textContent.trim();
+        const shiftBtn = document.querySelector('.option-btn[data-select-group="shift"].selected');
+        const statusBtn = document.querySelector('.option-btn[data-select-group="attendance-primary"].selected');
+        const status = statusBtn?.dataset.attendancePrimary || "present";
+        
+        if (!dateText || !shiftBtn) {
+           showToast("Missing Shift info.", "error");
+           return;
+        }
+
+        const monthMap = {
+          "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
+          "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
+        };
+        const monthIndexMap = {
+          "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+          "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+        };
+        const [day, monthStr, year] = dateText.split("-");
+        const formattedDate = `${year}-${monthMap[monthStr]}-${day}`;
+        const shiftType = shiftBtn.dataset.shiftType;
+
+        if (timeLabels[1]) timeLabels[1].textContent = `End Time: ${getCurrentDateTime()}`;
+        
+        stopTimer();
+
+        const actualNow = new Date();
+        const combinedISO = actualNow.toISOString();
+
+        const payload = {
+            action: "end",
+            attendance_date: formattedDate,
+            shift_type: shiftType,
+            status: status,
+            worker_end_date_time: combinedISO,
+            worker_end_location: window.workerLocation ? window.workerLocation : null
+        };
+
+        try {
+            const csrfToken = getCookie("csrftoken") || document.querySelector("input[name=csrfmiddlewaretoken]")?.value;
+            const response = await fetch("/worker/shift-upsert/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok) {
+                showToast("Work ended successfully!", "success");
+                endBtn.disabled = true;
+                if (startBtn) startBtn.disabled = true;
+                applyShiftTimes(lastStartIso, combinedISO);
+            } else {
+                showToast("Failed to end work: " + (data.message || "Unknown error"), "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Network error.", "error");
+        }
+      });
+  }
+
+});
+</script>

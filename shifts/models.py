@@ -6,8 +6,8 @@ from accounts.models.staff import Staff
 from accounts.models.worker import Worker
 from core.models import BaseModel
 
-
 class Shift(BaseModel):
+
     class ShiftType(models.TextChoices):
         DAY = "day", "Day"
         NIGHT = "night", "Night"
@@ -18,27 +18,13 @@ class Shift(BaseModel):
 
     class AbsenceReason(models.TextChoices):
         SICK = "sick", "Sick"
+        NO_BUS = "no_bus", "No Bus"
+        MISSED_BUS = "missed_bus", "Missed Bus"
         SITE_OUT = "site_out", "Site Out"
         NO_WORK = "no_work", "No Work"
         SAFETY = "safety", "Safety"
         TRAINING = "training", "Training"
 
-    attendance_date = models.DateField()
-    shift_type = models.CharField(max_length=10, choices=ShiftType.choices)
-    status = models.CharField(max_length=20, choices=Status.choices)
-    absence_reason = models.CharField(
-        max_length=20,
-        choices=AbsenceReason.choices,
-        null=True,
-        blank=True,
-    )
-    hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    start_date_time = models.DateTimeField(null=True, blank=True)
-    end_date_time = models.DateTimeField(null=True, blank=True)
-    worker_start_date_time = models.DateTimeField(null=True, blank=True)
-    worker_end_date_time = models.DateTimeField(null=True, blank=True)
-    staff_start_date_time = models.DateTimeField(null=True, blank=True)
-    staff_end_date_time = models.DateTimeField(null=True, blank=True)
     recorded_by_worker = models.ForeignKey(
         Worker,
         on_delete=models.SET_NULL,
@@ -53,6 +39,26 @@ class Shift(BaseModel):
         null=True,
         blank=True,
     )
+    attendance_date = models.DateField()
+    shift_type = models.CharField(max_length=10, choices=ShiftType.choices)
+    status = models.CharField(max_length=20, choices=Status.choices)
+    absence_reason = models.CharField(
+        max_length=20,
+        choices=AbsenceReason.choices,
+        null=True,
+        blank=True,
+    )
+    
+    worker_start_location = models.JSONField(null=True, blank=True)
+    worker_end_location = models.JSONField(null=True, blank=True)
+    
+    hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    start_date_time = models.DateTimeField(null=True, blank=True)
+    end_date_time = models.DateTimeField(null=True, blank=True)
+    worker_start_date_time = models.DateTimeField(null=True, blank=True)
+    worker_end_date_time = models.DateTimeField(null=True, blank=True)
+    staff_start_date_time = models.DateTimeField(null=True, blank=True)
+    staff_end_date_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -105,6 +111,8 @@ class Shift(BaseModel):
                     "staff_end_date_time",
                     "recorded_by_worker_id",
                     "recorded_by_staff_id",
+                    "worker_start_location",
+                    "worker_end_location",
                 )
                 .first()
             )
@@ -123,6 +131,8 @@ class Shift(BaseModel):
             "worker_end_date_time": self.worker_end_date_time,
             "staff_start_date_time": self.staff_start_date_time,
             "staff_end_date_time": self.staff_end_date_time,
+            "worker_start_location": self.worker_start_location,
+            "worker_end_location": self.worker_end_location,
         }
         if any(previous[key] != current[key] for key in current):
             ShiftAudit.objects.create(
@@ -140,6 +150,8 @@ class Shift(BaseModel):
                 worker_end_date_time=previous["worker_end_date_time"],
                 staff_start_date_time=previous["staff_start_date_time"],
                 staff_end_date_time=previous["staff_end_date_time"],
+                worker_start_location=previous["worker_start_location"],
+                worker_end_location=previous["worker_end_location"],
             )
 
 
@@ -179,6 +191,8 @@ class ShiftAudit(BaseModel):
     worker_end_date_time = models.DateTimeField(null=True, blank=True)
     staff_start_date_time = models.DateTimeField(null=True, blank=True)
     staff_end_date_time = models.DateTimeField(null=True, blank=True)
+    worker_start_location = models.JSONField(null=True, blank=True)
+    worker_end_location = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created"]

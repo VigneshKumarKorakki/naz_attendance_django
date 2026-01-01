@@ -19,7 +19,11 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+  
+    path("", include("shifts.urls")),
+
+    # 🔵 Frontend & auth AFTER
     path("", include("worker_portal.urls")),
     path("", include("accounts.urls")),
-    path("", include("shifts.urls")),
 ]
