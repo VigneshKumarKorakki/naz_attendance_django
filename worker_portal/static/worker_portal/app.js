@@ -12,10 +12,12 @@ const stageTriggers = document.querySelectorAll("[data-stage-trigger]");
 const attendanceStage = document.querySelector('[data-stage="attendance"]');
 const selectButtons = document.querySelectorAll("[data-select-group]");
 const authResetTargets = document.querySelectorAll(
-  "[data-select-group], [data-stage=\"attendance\"], [data-attendance-secondary]"
+  '[data-select-group], [data-stage="attendance"], [data-attendance-secondary]'
 );
 const passwordToggles = document.querySelectorAll("[data-toggle-password]");
-const attendanceSecondary = document.querySelector("[data-attendance-secondary]");
+const attendanceSecondary = document.querySelector(
+  "[data-attendance-secondary]"
+);
 const sessionMeta = document.getElementById("session-meta");
 let sessionAuthenticated = sessionMeta?.dataset.authenticated === "true";
 const sessionDisplayName = sessionMeta?.dataset.sessionDisplayName || "";
@@ -107,7 +109,7 @@ const clearShiftData = () => {
     displayTimeText.dataset.timeSource = "clock";
   }
   window.workerTimeUI?.applyShiftTimes?.(null, null);
-  
+
   // Reset Captured Location
   window.workerLocation = null;
   const locStatus = document.getElementById("location-status");
@@ -115,18 +117,22 @@ const clearShiftData = () => {
 
   // Ensure view sections are hidden on reset but the button itself is in the DOM
   document.getElementById("section-view-attendance")?.classList.add("hidden");
-  document.getElementById("section-attendance-history")?.classList.add("hidden");
-  document.getElementById("section-attendance-summary")?.classList.add("hidden");
+  document
+    .getElementById("section-attendance-history")
+    ?.classList.add("hidden");
+  document
+    .getElementById("section-attendance-summary")
+    ?.classList.add("hidden");
 };
 
 const applyShiftData = (data) => {
   if (!data) return;
-  
+
   // Reset captured location when loading existing record
   window.workerLocation = null;
   const locStatus = document.getElementById("location-status");
   if (locStatus) locStatus.textContent = "";
-  
+
   applySelection("shift", "shiftType", data.shift_type);
   applySelection("attendance-primary", "attendancePrimary", data.status);
   setRecordedTime(data.worker_start_date_time || data.worker_end_date_time);
@@ -188,7 +194,9 @@ langs.forEach((lang) => {
   });
 });
 
-const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const isLocalhost = ["localhost", "127.0.0.1"].includes(
+  window.location.hostname
+);
 
 if ("serviceWorker" in navigator && !isLocalhost) {
   window.addEventListener("load", () => {
@@ -200,11 +208,11 @@ if (isLocalhost && loginForm) {
   const loginInput = loginForm.querySelector('input[name="login"]');
   const passwordInput = loginForm.querySelector('input[name="password"]');
   if (loginInput && !loginInput.value) {
-    loginInput.value = "56565656";
+    loginInput.value = "9994944329";
     loginInput.dispatchEvent(new Event("input", { bubbles: true }));
   }
   if (passwordInput && !passwordInput.value) {
-    passwordInput.value = "B5656";
+    passwordInput.value = "Welcome123!";
     passwordInput.dispatchEvent(new Event("input", { bubbles: true }));
   }
 }
@@ -223,10 +231,10 @@ const showToast = (message, type = "info") => {
   toast.classList.remove("error", "success");
   if (type === "error" || type === true) toast.classList.add("error");
   if (type === "success") toast.classList.add("success");
-  
+
   toast.hidden = false;
   toast.classList.add("show");
-  
+
   if (window._toastTimeout) clearTimeout(window._toastTimeout);
   window._toastTimeout = window.setTimeout(() => {
     toast.classList.remove("show");
@@ -243,234 +251,287 @@ const showToast = (message, type = "info") => {
 window.showToast = showToast;
 
 const saveShift = async (payload) => {
-    const csrfToken = getCsrfToken();
-    try {
-        const response = await fetch("/worker/shift-upsert/", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "Content-Type": "application/json",
-                ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-            },
-            body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (data.ok) {
-            showToast("Record updated successfully", "success");
-            if (data.data) {
-                applyShiftData(data.data);
-            }
-        } else {
-            showToast(data.message || "Update failed", "error");
-        }
-    } catch (err) {
-        console.error(err);
-        showToast("Network error", "error");
+  const csrfToken = getCsrfToken();
+  try {
+    const response = await fetch("/worker/shift-upsert/", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (data.ok) {
+      showToast("Record updated successfully", "success");
+      if (data.data) {
+        applyShiftData(data.data);
+      }
+    } else {
+      showToast(data.message || "Update failed", "error");
     }
+  } catch (err) {
+    console.error(err);
+    showToast("Network error", "error");
+  }
 };
 
 let currentCalendarDate = new Date();
 let cachedHistory = [];
 
 const parseAttendanceDate = (value) => {
-    if (!value) return null;
-    if (typeof value === "string") {
-        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (match) {
-            return {
-                year: Number(match[1]),
-                month: Number(match[2]) - 1,
-                day: Number(match[3]),
-            };
-        }
+  if (!value) return null;
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      return {
+        year: Number(match[1]),
+        month: Number(match[2]) - 1,
+        day: Number(match[3]),
+      };
     }
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return null;
-    return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate(), date: d };
+  }
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return {
+    year: d.getFullYear(),
+    month: d.getMonth(),
+    day: d.getDate(),
+    date: d,
+  };
 };
 
 const fetchAttendanceHistory = async () => {
-    try {
-        const response = await fetch("/api/v1/worker/attendance-history/");
-        const data = await response.json();
-        if (data.ok) {
-            cachedHistory = data.data;
-            renderAttendanceUI();
-        }
-    } catch (err) {
-        console.error("Failed to fetch history:", err);
+  try {
+    const response = await fetch("/api/v1/worker/attendance-history/");
+    const data = await response.json();
+    if (data.ok) {
+      cachedHistory = data.data;
+      renderAttendanceUI();
     }
+  } catch (err) {
+    console.error("Failed to fetch history:", err);
+  }
 };
 
 const renderAttendanceUI = () => {
-    const viewMonth = currentCalendarDate.getMonth();
-    const viewYear = currentCalendarDate.getFullYear();
-    const monthlyRecords = cachedHistory.filter(shift => {
-        const parts = parseAttendanceDate(shift.attendance_date);
-        return parts && parts.month === viewMonth && parts.year === viewYear;
-    });
+  const viewMonth = currentCalendarDate.getMonth();
+  const viewYear = currentCalendarDate.getFullYear();
+  const monthlyRecords = cachedHistory.filter((shift) => {
+    const parts = parseAttendanceDate(shift.attendance_date);
+    return parts && parts.month === viewMonth && parts.year === viewYear;
+  });
 
-    const historySec = document.getElementById("section-attendance-history");
-    const summarySec = document.getElementById("section-attendance-summary");
+  const historySec = document.getElementById("section-attendance-history");
+  const summarySec = document.getElementById("section-attendance-summary");
 
-    historySec?.classList.remove("hidden");
-    summarySec?.classList.remove("hidden");
+  historySec?.classList.remove("hidden");
+  summarySec?.classList.remove("hidden");
 
-    renderAttendanceTable(cachedHistory, currentCalendarDate);
-    renderCalendar(cachedHistory, currentCalendarDate);
-    renderAttendanceSummary(cachedHistory, currentCalendarDate);
+  renderAttendanceTable(cachedHistory, currentCalendarDate);
+  renderCalendar(cachedHistory, currentCalendarDate);
+  renderAttendanceSummary(cachedHistory, currentCalendarDate);
 };
 
 const renderAttendanceTable = (history, baseDate) => {
-    const tbody = document.getElementById("attendance-table-body");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    
-    const viewMonth = baseDate.getMonth();
-    const viewYear = baseDate.getFullYear();
+  const tbody = document.getElementById("attendance-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
 
-    const displayData = history.filter(shift => {
-        const parts = parseAttendanceDate(shift.attendance_date);
-        return parts && parts.month === viewMonth && parts.year === viewYear;
-    });
-    
-    if (displayData.length === 0) {
-        const tr = document.createElement("tr");
-        const msg = I18N[localStorage.getItem("workerLang") || "en"]["dash.no_records"] || "No attendance records available for this month";
-        tr.innerHTML = `<td colspan="3" style="text-align:center; padding: 20px; color: var(--muted);">${msg}</td>`;
-        tbody.appendChild(tr);
-        return;
-    }
+  const viewMonth = baseDate.getMonth();
+  const viewYear = baseDate.getFullYear();
 
-    displayData.forEach(shift => {
-        const tr = document.createElement("tr");
-        
-        const formatDate = (iso) => {
-            const parts = parseAttendanceDate(iso);
-            if (!parts) return "";
-            return `${parts.day}-${monthMapReverse[parts.month]}-${parts.year}`;
-        };
+  const displayData = history.filter((shift) => {
+    const parts = parseAttendanceDate(shift.attendance_date);
+    return parts && parts.month === viewMonth && parts.year === viewYear;
+  });
 
-        const formatTime = (iso) => {
-            if (!iso) return "";
-            const d = new Date(iso);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
-        };
+  if (displayData.length === 0) {
+    const tr = document.createElement("tr");
+    const msg =
+      I18N[localStorage.getItem("workerLang") || "en"]["dash.no_records"] ||
+      "No attendance records available for this month";
+    tr.innerHTML = `<td colspan="3" style="text-align:center; padding: 20px; color: var(--muted);">${msg}</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
 
-        tr.innerHTML = `
+  displayData.forEach((shift) => {
+    const tr = document.createElement("tr");
+
+    const formatDate = (iso) => {
+      const parts = parseAttendanceDate(iso);
+      if (!parts) return "";
+      return `${parts.day}-${monthMapReverse[parts.month]}-${parts.year}`;
+    };
+
+    const formatTime = (iso) => {
+      if (!iso) return "";
+      const d = new Date(iso);
+      return d
+        .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        .toLowerCase();
+    };
+
+    tr.innerHTML = `
             <td>${formatDate(shift.attendance_date)}</td>
             <td>${formatTime(shift.worker_start_date_time)}</td>
             <td>${formatTime(shift.worker_end_date_time)}</td>
         `;
-        tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
+  });
 };
 
-const monthMapReverse = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthMapReverse = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 const renderCalendar = (history, baseDate) => {
-    const grid = document.getElementById("calendar-grid");
-    if (!grid) return;
-    
-    // Clear previous days (keep DOW headers)
-    const dows = grid.querySelectorAll(".dow");
-    grid.innerHTML = "";
-    dows.forEach(dow => grid.appendChild(dow));
+  const grid = document.getElementById("calendar-grid");
+  if (!grid) return;
 
-    const viewYear = baseDate.getFullYear();
-    const viewMonth = baseDate.getMonth();
-    
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    
-    const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(baseDate);
-    const monthDisplay = document.getElementById("current-month-display");
-    if (monthDisplay) monthDisplay.textContent = `${monthName} ${viewYear}`;
+  // Clear previous days (keep DOW headers)
+  const dows = grid.querySelectorAll(".dow");
+  grid.innerHTML = "";
+  dows.forEach((dow) => grid.appendChild(dow));
 
-    // Padding for first day
-    for (let i = 0; i < firstDay; i++) {
-        const div = document.createElement("div");
-        div.className = "calendar-day other-month";
-        grid.appendChild(div);
+  const viewYear = baseDate.getFullYear();
+  const viewMonth = baseDate.getMonth();
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const monthName = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+    baseDate
+  );
+  const monthDisplay = document.getElementById("current-month-display");
+  if (monthDisplay) monthDisplay.textContent = `${monthName} ${viewYear}`;
+
+  // Padding for first day
+  for (let i = 0; i < firstDay; i++) {
+    const div = document.createElement("div");
+    div.className = "calendar-day other-month";
+    grid.appendChild(div);
+  }
+
+  const now = new Date();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const div = document.createElement("div");
+    div.className = "calendar-day";
+    if (
+      viewMonth === now.getMonth() &&
+      viewYear === now.getFullYear() &&
+      d === now.getDate()
+    ) {
+      div.classList.add("today");
     }
 
-    const now = new Date();
-    for (let d = 1; d <= daysInMonth; d++) {
-        const div = document.createElement("div");
-        div.className = "calendar-day";
-        if (viewMonth === now.getMonth() && viewYear === now.getFullYear() && d === now.getDate()) {
-            div.classList.add("today");
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(d).padStart(2, "0")}`;
+    const shift = history.find((s) => s.attendance_date === dateStr);
+
+    div.innerHTML = `<span class="day-num">${d}</span>`;
+
+    if (shift) {
+      if (shift.status === "absent" || shift.absence_reason) {
+        div.innerHTML += `<span class="tick red">✖</span>`;
+      } else {
+        if (shift.recorded_by_worker) {
+          div.innerHTML += `<span class="tick black">✔</span>`;
         }
-        
-        const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const shift = history.find(s => s.attendance_date === dateStr);
-        
-        div.innerHTML = `<span class="day-num">${d}</span>`;
-        
-        if (shift) {
-            if (shift.status === "absent" || shift.absence_reason) {
-                div.innerHTML += `<span class="tick red">✖</span>`;
-            } else {
-                if (shift.recorded_by_worker) {
-                    div.innerHTML += `<span class="tick black">✔</span>`;
-                }
-                if (shift.recorded_by_staff) {
-                    div.innerHTML += `<span class="tick green">✔</span>`;
-                }
-            }
+        if (shift.recorded_by_staff) {
+          div.innerHTML += `<span class="tick green">✔</span>`;
         }
-        
-        grid.appendChild(div);
+      }
     }
+
+    grid.appendChild(div);
+  }
 };
 
 const renderAttendanceSummary = (history, baseDate) => {
-    const viewMonth = baseDate.getMonth();
-    const viewYear = baseDate.getFullYear();
+  const viewMonth = baseDate.getMonth();
+  const viewYear = baseDate.getFullYear();
 
-    const currentMonthShifts = history.filter(shift => {
-        const parts = parseAttendanceDate(shift.attendance_date);
-        return parts && parts.month === viewMonth && parts.year === viewYear;
-    });
+  const currentMonthShifts = history.filter((shift) => {
+    const parts = parseAttendanceDate(shift.attendance_date);
+    return parts && parts.month === viewMonth && parts.year === viewYear;
+  });
 
-    const present = currentMonthShifts.filter(s => s.status === "present").length;
-    // Total Absent = anything not present + explicitly absent status
-    const totalAbsent = currentMonthShifts.filter(s => s.status === "absent" || s.absence_reason).length;
+  const present = currentMonthShifts.filter(
+    (s) => s.status === "present"
+  ).length;
+  // Total Absent = anything not present + explicitly absent status
+  const totalAbsent = currentMonthShifts.filter(
+    (s) => s.status === "absent" || s.absence_reason
+  ).length;
 
-    const sick = currentMonthShifts.filter(s => s.absence_reason === "sick").length;
-    const absentOnly = currentMonthShifts.filter(s => s.status === "absent" && !s.absence_reason).length;
-    const noBus = currentMonthShifts.filter(s => s.absence_reason === "no_bus").length;
-    const missedBus = currentMonthShifts.filter(s => s.absence_reason === "missed_bus").length;
-    const siteOut = currentMonthShifts.filter(s => s.absence_reason === "site_out").length;
-    const noWork = currentMonthShifts.filter(s => s.absence_reason === "no_work").length;
-    const safety = currentMonthShifts.filter(s => s.absence_reason === "safety").length;
-    const training = currentMonthShifts.filter(s => s.absence_reason === "training").length;
+  const sick = currentMonthShifts.filter(
+    (s) => s.absence_reason === "sick"
+  ).length;
+  const absentOnly = currentMonthShifts.filter(
+    (s) => s.status === "absent" && !s.absence_reason
+  ).length;
+  const noBus = currentMonthShifts.filter(
+    (s) => s.absence_reason === "no_bus"
+  ).length;
+  const missedBus = currentMonthShifts.filter(
+    (s) => s.absence_reason === "missed_bus"
+  ).length;
+  const siteOut = currentMonthShifts.filter(
+    (s) => s.absence_reason === "site_out"
+  ).length;
+  const noWork = currentMonthShifts.filter(
+    (s) => s.absence_reason === "no_work"
+  ).length;
+  const safety = currentMonthShifts.filter(
+    (s) => s.absence_reason === "safety"
+  ).length;
+  const training = currentMonthShifts.filter(
+    (s) => s.absence_reason === "training"
+  ).length;
 
-    const updateEl = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-    };
+  const updateEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
 
-    const summaryPeriod = document.getElementById("summary-month-year");
-    if (summaryPeriod) {
-        const monthName = new Intl.DateTimeFormat("en-US", { month: "long" }).format(baseDate);
-        summaryPeriod.textContent = `- ${monthName} ${viewYear}`;
-    }
+  const summaryPeriod = document.getElementById("summary-month-year");
+  if (summaryPeriod) {
+    const monthName = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+    }).format(baseDate);
+    summaryPeriod.textContent = `- ${monthName} ${viewYear}`;
+  }
 
-    // Main Stats
-    updateEl("summary-total-present-main", present);
-    updateEl("summary-total-absent-main", totalAbsent);
+  // Main Stats
+  updateEl("summary-total-present-main", present);
+  updateEl("summary-total-absent-main", totalAbsent);
 
-    // Detail Grid
-    updateEl("summary-total-present", present);
-    updateEl("summary-total-absent", absentOnly);
-    updateEl("summary-total-sick", sick);
-    updateEl("summary-total-no-bus", noBus);
-    updateEl("summary-total-missed-bus", missedBus);
-    updateEl("summary-total-site-out", siteOut);
-    updateEl("summary-total-no-work", noWork);
-    updateEl("summary-total-safety", safety);
-    updateEl("summary-total-training", training);
+  // Detail Grid
+  updateEl("summary-total-present", present);
+  updateEl("summary-total-absent", absentOnly);
+  updateEl("summary-total-sick", sick);
+  updateEl("summary-total-no-bus", noBus);
+  updateEl("summary-total-missed-bus", missedBus);
+  updateEl("summary-total-site-out", siteOut);
+  updateEl("summary-total-no-work", noWork);
+  updateEl("summary-total-safety", safety);
+  updateEl("summary-total-training", training);
 };
 
 if (sessionAuthenticated) {
@@ -569,30 +630,36 @@ const clearGroupSelection = (groupName) => {
   });
 };
 
-document.getElementById("btn-view-attendance")?.addEventListener("click", () => {
+document
+  .getElementById("btn-view-attendance")
+  ?.addEventListener("click", () => {
     const viewSec = document.getElementById("section-view-attendance");
     const isHidden = viewSec.classList.contains("hidden");
-    
+
     if (isHidden) {
-        viewSec.classList.remove("hidden");
-        // We call fetchAttendanceHistory which will then call renderAttendanceUI
-        // renderAttendanceUI will decide if history/summary should be visible
-        fetchAttendanceHistory();
+      viewSec.classList.remove("hidden");
+      // We call fetchAttendanceHistory which will then call renderAttendanceUI
+      // renderAttendanceUI will decide if history/summary should be visible
+      fetchAttendanceHistory();
     } else {
-        viewSec.classList.add("hidden");
-        document.getElementById("section-attendance-history")?.classList.add("hidden");
-        document.getElementById("section-attendance-summary")?.classList.add("hidden");
+      viewSec.classList.add("hidden");
+      document
+        .getElementById("section-attendance-history")
+        ?.classList.add("hidden");
+      document
+        .getElementById("section-attendance-summary")
+        ?.classList.add("hidden");
     }
-});
+  });
 
 document.getElementById("prev-month")?.addEventListener("click", () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-    renderAttendanceUI();
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+  renderAttendanceUI();
 });
 
 document.getElementById("next-month")?.addEventListener("click", () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-    renderAttendanceUI();
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+  renderAttendanceUI();
 });
 
 // Re-query attendanceSecondary in case DOM updates affect it? No, it's consistent.
@@ -606,7 +673,7 @@ selectButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     const groupName = btn.dataset.selectGroup;
     clearGroupSelection(groupName);
-    
+
     // Toggle check: if already selected, we are unselecting? No, radio behavior usually.
     // But specific request: just select it.
     btn.classList.add("selected");
@@ -620,57 +687,64 @@ selectButtons.forEach((btn) => {
       const primary = btn.dataset.attendancePrimary;
       const endBtn = document.getElementById("btn-end-work");
       const timerBtn = document.getElementById("btn-timer");
-      const timeLabels = document.querySelectorAll('p.section-title.muted[data-i18n="dash.system_time"]');
+      const timeLabels = document.querySelectorAll(
+        'p.section-title.muted[data-i18n="dash.system_time"]'
+      );
 
-        const timeStage = document.querySelector('[data-stage="time"]');
-        const locationStage = document.querySelector('[data-stage="location"]');
+      const timeStage = document.querySelector('[data-stage="time"]');
+      const locationStage = document.querySelector('[data-stage="location"]');
 
-        if (primary === "absent") {
-          attendanceSecondary.classList.remove("hidden");
-          // Hide End, Timer and labels
-          endBtn?.classList.add("hidden");
-          timerBtn?.classList.add("hidden");
-          timeLabels.forEach(el => el.classList.add("hidden"));
-          
-          // Hide Time and Location stages
-          timeStage?.classList.add("hidden");
-          locationStage?.classList.add("hidden");
-          
-          // Scroll to it for better UX
-          attendanceSecondary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else {
-          attendanceSecondary.classList.add("hidden");
-          // Show End, Timer and labels
-          endBtn?.classList.remove("hidden");
-          timerBtn?.classList.remove("hidden");
-          timeLabels.forEach(el => el.classList.remove("hidden"));
+      if (primary === "absent") {
+        attendanceSecondary.classList.remove("hidden");
+        // Hide End, Timer and labels
+        endBtn?.classList.add("hidden");
+        timerBtn?.classList.add("hidden");
+        timeLabels.forEach((el) => el.classList.add("hidden"));
 
-          // Show Time and Location stages
-          timeStage?.classList.remove("hidden");
-          locationStage?.classList.remove("hidden");
-          
-          clearGroupSelection("attendance-secondary");
-        }
+        // Hide Time and Location stages
+        timeStage?.classList.add("hidden");
+        locationStage?.classList.add("hidden");
+
+        // Scroll to it for better UX
+        attendanceSecondary.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      } else {
+        attendanceSecondary.classList.add("hidden");
+        // Show End, Timer and labels
+        endBtn?.classList.remove("hidden");
+        timerBtn?.classList.remove("hidden");
+        timeLabels.forEach((el) => el.classList.remove("hidden"));
+
+        // Show Time and Location stages
+        timeStage?.classList.remove("hidden");
+        locationStage?.classList.remove("hidden");
+
+        clearGroupSelection("attendance-secondary");
+      }
     }
 
     if (groupName === "attendance-secondary") {
-        const reason = btn.dataset.attendanceSecondary;
-        const shiftBtn = document.querySelector('.option-btn[data-select-group="shift"].selected');
-        const formattedDate = getFormattedDateFromDisplay();
-        
-        if (!shiftBtn) {
-            showToast("Please select a shift first", "error");
-            return;
-        }
-        
-        const payload = {
-            attendance_date: formattedDate,
-            shift_type: shiftBtn.dataset.shiftType,
-            status: "absent",
-            absence_reason: reason,
-            action: "start"
-        };
-        saveShift(payload);
+      const reason = btn.dataset.attendanceSecondary;
+      const shiftBtn = document.querySelector(
+        '.option-btn[data-select-group="shift"].selected'
+      );
+      const formattedDate = getFormattedDateFromDisplay();
+
+      if (!shiftBtn) {
+        showToast("Please select a shift first", "error");
+        return;
+      }
+
+      const payload = {
+        attendance_date: formattedDate,
+        shift_type: shiftBtn.dataset.shiftType,
+        status: "absent",
+        absence_reason: reason,
+        action: "start",
+      };
+      saveShift(payload);
     }
   });
 });
@@ -718,9 +792,6 @@ if (loginForm) {
     const payload = await response.json();
     if (dashboardSection) {
       dashboardSection.classList.remove("hidden");
-    }
-    if (authSection) {
-      authSection.classList.add("hidden");
     }
     if (displayName) {
       displayName.textContent = payload.name || "Display The Name Here";
