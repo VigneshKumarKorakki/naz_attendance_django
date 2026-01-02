@@ -61,6 +61,8 @@ class StaffLoginView(APIView):
         access = refresh.access_token
         access["role"] = "staff"
         display_name = (str(staff) if staff else None) or user.get_full_name() or user.get_username()
+        groups = list(user.groups.values_list("name", flat=True))
+        permissions = sorted(user.get_all_permissions())
         return api_response(
             ok=True,
             message="Login success",
@@ -71,5 +73,7 @@ class StaffLoginView(APIView):
                 "refresh": str(refresh),
                 "access": str(access),
                 "role": "staff",
+                "groups": groups,
+                "permissions": permissions,
             },
         )
