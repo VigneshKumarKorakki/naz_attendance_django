@@ -19,7 +19,7 @@ DATABASES = {
 
 DEBUG = True  # noqa
 # ALLOWED_HOSTS = ["localhost", "127.0.0.1", "naz.localhost"]  # noqa
-ALLOWED_HOSTS = []  # noqa
+ALLOWED_HOSTS = ["*"]  # noqa
 
 # CORS settings for local frontend dev
 CORS_ALLOWED_ORIGINS = [

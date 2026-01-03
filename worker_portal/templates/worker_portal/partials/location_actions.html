@@ -10,6 +10,75 @@
 
   const locBtn = document.getElementById("get-location-btn");
   const locStatus = document.getElementById("location-status");
+  const startWorkBtn = document.getElementById("btn-start-work");
+  const endWorkBtn = document.getElementById("btn-end-work");
+
+  function isPastAttendanceDate() {
+    const dateEl = document.querySelector(".date-info .date");
+    const isoDate = dateEl?.dataset?.isoDate;
+    if (!isoDate) return false;
+    const selected = new Date(isoDate);
+    if (Number.isNaN(selected.getTime())) return false;
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selected < today;
+  }
+
+  function hasCurrentShift() {
+    return Boolean(window.workerShiftCurrent);
+  }
+
+  function savePastDateLocation() {
+    const shiftBtn = document.querySelector(
+      '.option-btn[data-select-group="shift"].selected'
+    );
+    if (!shiftBtn) {
+      showToast("Please select a shift first", "error");
+      return;
+    }
+    const statusBtn = document.querySelector(
+      '.option-btn[data-select-group="attendance-primary"].selected'
+    );
+    const status = statusBtn?.dataset.attendancePrimary || "present";
+    let absenceReason = null;
+    if (status === "absent") {
+      const reasonBtn = document.querySelector(
+        '.option-btn[data-select-group="attendance-secondary"].selected'
+      );
+      absenceReason = reasonBtn?.dataset.attendanceSecondary || null;
+      if (!absenceReason) {
+        showToast("Please select an absence reason", "error");
+        return;
+      }
+    }
+    const formattedDate = getFormattedDateFromDisplay();
+    const payload = {
+      action: "location",
+      attendance_date: formattedDate,
+      shift_type: shiftBtn.dataset.shiftType,
+      status: status,
+      absence_reason: absenceReason,
+      worker_start_location: window.workerLocation || null,
+    };
+    saveShift(payload);
+  }
+
+  function updateLocationButtonState() {
+    if (!locBtn) return;
+    if (isPastAttendanceDate()) {
+      if (hasCurrentShift()) {
+        locBtn.disabled = true;
+        locBtn.setAttribute("aria-disabled", "true");
+      } else {
+        locBtn.disabled = false;
+        locBtn.removeAttribute("aria-disabled");
+      }
+      return;
+    }
+    locBtn.disabled = false;
+    locBtn.removeAttribute("aria-disabled");
+  }
 
   if (locBtn) {
     locBtn.addEventListener("click", () => {
@@ -27,15 +96,21 @@
           locStatus.textContent = `Location set: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
           locStatus.style.color = "green";
 
-          const startWorkBtn = document.getElementById("btn-start-work");
-          const endWorkBtn = document.getElementById("btn-end-work");
+          if (isPastAttendanceDate()) {
+            if (!hasCurrentShift()) {
+              savePastDateLocation();
+            }
+            return;
+          }
           const hasStart = Boolean(startWorkBtn?.dataset.startTime);
           const hasEnd = Boolean(endWorkBtn?.dataset.endTime);
           if (startWorkBtn && !hasStart) {
             startWorkBtn.disabled = false;
+            startWorkBtn.classList.remove("hidden");
           }
           if (endWorkBtn && hasStart && !hasEnd) {
             endWorkBtn.disabled = false;
+            endWorkBtn.classList.remove("hidden");
           }
         },
         (error) => {
@@ -45,5 +120,9 @@
         }
       );
     });
+
+    updateLocationButtonState();
+    window.addEventListener("attendance:date-changed", updateLocationButtonState);
+    window.addEventListener("attendance:shift-updated", updateLocationButtonState);
   }
 </script>

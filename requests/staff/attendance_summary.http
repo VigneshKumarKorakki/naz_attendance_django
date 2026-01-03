@@ -1,0 +1,12 @@
+# @name staffLogin
+POST {{baseUrl}}/api/{{apiVersion}}/staff/login/
+Content-Type: application/json
+
+{
+  "phone": "{{staffPhone}}",
+  "password": "{{staffPassword}}"
+}
+
+### @name staffAttendanceSummary
+GET {{baseUrl}}/api/{{apiVersion}}/staff/attendance-summary/?year=2026&month=1&page=1&page_size=25
+Authorization: Bearer {{staffLogin.response.body.data.access}}

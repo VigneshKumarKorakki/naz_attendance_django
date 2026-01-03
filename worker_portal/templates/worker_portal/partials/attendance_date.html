@@ -13,28 +13,41 @@
 <script>
   (function() {
     let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    const today = new Date(currentDate);
     
     const dayEl = document.getElementById("display-day-name");
     const dateEl = document.getElementById("display-date-text");
     const prevBtn = document.getElementById("prev-day");
     const nextBtn = document.getElementById("next-day");
+    const localeMap = {
+      en: "en-US",
+      ur: "ur-PK",
+      rn: "rn-BI",
+    };
+
+    function getLocale() {
+      const lang = localStorage.getItem("workerLang") || "en";
+      return localeMap[lang] || lang;
+    }
 
     function formatDate(date) {
-      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      
-      const dayName = days[date.getDay()];
-      const dayNum = String(date.getDate()).padStart(2, "0");
-      const monthName = months[date.getMonth()];
-      const year = date.getFullYear();
-
+      const locale = getLocale();
+      const dayName = new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+      }).format(date);
+      const dateStr = new Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(date);
       return {
         dayName: dayName,
-        dateStr: `${dayNum}-${monthName}-${year}`
+        dateStr: dateStr
       };
     }
 
-    function updateDisplay() {
+    function updateDisplay(emitEvent = true) {
       const fmt = formatDate(currentDate);
       dayEl.textContent = fmt.dayName;
       dateEl.textContent = fmt.dateStr;
@@ -42,15 +55,19 @@
       const monthIndex = String(currentDate.getMonth() + 1).padStart(2, "0");
       const dayIndex = String(currentDate.getDate()).padStart(2, "0");
       const payloadDate = `${currentDate.getFullYear()}-${monthIndex}-${dayIndex}`;
-      window.dispatchEvent(
-        new CustomEvent("attendance:date-changed", {
-          detail: {
-            displayDate: fmt.dateStr,
-            formattedDate: payloadDate,
-            date: new Date(currentDate),
-          },
-        })
-      );
+      dateEl.dataset.isoDate = payloadDate;
+      if (emitEvent) {
+        window.dispatchEvent(
+          new CustomEvent("attendance:date-changed", {
+            detail: {
+              displayDate: fmt.dateStr,
+              formattedDate: payloadDate,
+              date: new Date(currentDate),
+            },
+          })
+        );
+      }
+      nextBtn.disabled = currentDate >= today;
     }
 
     // Initialize
@@ -62,8 +79,13 @@
     });
 
     nextBtn.addEventListener("click", () => {
+      if (currentDate >= today) return;
       currentDate.setDate(currentDate.getDate() + 1);
       updateDisplay();
+    });
+
+    window.addEventListener("worker:language-changed", () => {
+      updateDisplay(false);
     });
 
   })();

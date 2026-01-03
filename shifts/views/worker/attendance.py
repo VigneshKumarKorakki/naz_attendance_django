@@ -1,5 +1,6 @@
 from django.utils.dateparse import parse_date
 from django.utils.timezone import now
+from django.db.models import Max
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -87,7 +88,9 @@ class WorkerAttendanceHistoryView(APIView):
         # Optionally filter by month/year if needed
         # For now, let's return all shifts
         shifts = Shift.objects.filter(recorded_by_worker=worker).order_by("-attendance_date")
+        last_updated_at = shifts.aggregate(Max("modified")).get("modified__max")
         return Response({
             "ok": True,
-            "data": ShiftSerializer(shifts, many=True).data
+            "data": ShiftSerializer(shifts, many=True).data,
+            "last_updated_at": last_updated_at.isoformat() if last_updated_at else "",
         })

@@ -5,6 +5,7 @@
     id="session-meta"
     data-authenticated="{{ is_authenticated|yesno:'true,false' }}"
     data-session-display-name="{{ display_name|default:'' }}"
+    data-worker-id="{{ worker_id|default:'' }}"
     hidden
   ></div>
   {% include "worker_portal/partials/language.html" %}

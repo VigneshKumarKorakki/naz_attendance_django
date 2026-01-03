@@ -1,6 +1,7 @@
 from django.urls import path
 
 from shifts.views.staff.shift import StaffShiftDetailView, StaffShiftUpsertView
+from shifts.views.staff.attendance_summary import StaffWorkerAttendanceSummaryView
 from shifts.views.staff.worker import StaffWorkerDetailView, StaffWorkerListView
 from shifts.views.worker.attendance import WorkerAttendanceHistoryView, WorkerAttendanceUpsertView
 
@@ -32,5 +33,10 @@ urlpatterns = [
         "api/v1/worker/attendance-history/",
         WorkerAttendanceHistoryView.as_view(),
         name="worker-attendance-history",
+    ),
+    path(
+        "api/v1/staff/attendance-summary/",
+        StaffWorkerAttendanceSummaryView.as_view(),
+        name="staff-attendance-summary",
     ),
 ]

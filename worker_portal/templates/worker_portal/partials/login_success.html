@@ -1,9 +1,16 @@
 <section class="block">
-  <p class="success-banner" data-i18n="dash.success">
-    You are now successfully login
-  </p>
   <div class="field">
     <span data-i18n="dash.name_label">Your Name</span>
     <strong class="display-name" data-display-name>Worker Name</strong>
   </div>
+  {% if show_last_updated %}
+  <div class="field">
+    <span data-i18n="dash.last_updated_db">Last update (DB)</span>
+    <strong data-last-updated-db>—</strong>
+  </div>
+  <div class="field">
+    <span data-i18n="dash.last_updated_local">Last update (Local)</span>
+    <strong data-last-updated-local>—</strong>
+  </div>
+  {% endif %}
 </section>

@@ -112,6 +112,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Worker portal feature flags
+WORKER_PORTAL_SHOW_LAST_UPDATED = True
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

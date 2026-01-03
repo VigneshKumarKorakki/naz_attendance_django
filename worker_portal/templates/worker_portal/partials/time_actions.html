@@ -13,9 +13,9 @@
   <p class="section-title muted" data-i18n="dash.system_time">
     System Date &amp; Time
   </p>
-  <button class="cta secondary" type="button" id="btn-timer" data-i18n="dash.timer" disabled>
+  <div class="timer-display is-disabled" id="timer-display" data-i18n="dash.timer" aria-live="polite">
     Timer
-  </button>
+  </div>
 </section>
 
 <button class="cta alt" type="button" id="btn-view-attendance" data-i18n="dash.view_attendance">
@@ -27,17 +27,29 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Timer variables & elements
   let timerInterval;
-  const timerBtn = document.getElementById("btn-timer");
+  const timerDisplay = document.getElementById("timer-display");
   // If elements aren't found, we might be on a partial reload or they don't exist yet? 
   // But this is inside a partial that is included. 
   // Ideally, code inside partials is executed when included.
   // However, `const` at top level of a script in a partial might conflict if partial is loaded multiple times?
   // Let's use vars or strictly scoped.
   
-  if (!timerBtn) return; // Exit if elements missing (e.g. partial loaded but id changed)
+  if (!timerDisplay) return; // Exit if elements missing (e.g. partial loaded but id changed)
 
   let timerStartTime = null;
   let lastStartIso = null;
+  let lastEndIso = null;
+
+  const getBundle = () => {
+    const lang = localStorage.getItem("workerLang") || "en";
+    return (window.I18N && (I18N[lang] || I18N.en)) || {};
+  };
+  const t = (key, fallback) => {
+    const bundle = getBundle();
+    if (bundle[key]) return bundle[key];
+    const en = (window.I18N && I18N.en) || {};
+    return en[key] || fallback || key;
+  };
   
   const timeLabels = document.querySelectorAll(
     'p.section-title.muted[data-i18n="dash.system_time"]'
@@ -46,6 +58,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const endBtn = document.getElementById("btn-end-work");
   const startTimeText = document.getElementById("start-time-text");
   const endTimeText = document.getElementById("end-time-text");
+
+  function isPastAttendanceDate() {
+      const dateEl = document.querySelector(".date-info .date");
+      const isoDate = dateEl?.dataset?.isoDate;
+      if (!isoDate) return false;
+      const selected = new Date(isoDate);
+      if (Number.isNaN(selected.getTime())) return false;
+      selected.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selected < today;
+  }
+
+  function applyDateGuard() {
+      if (!startBtn) return;
+      if (isPastAttendanceDate()) {
+          startBtn.disabled = true;
+          startBtn.dataset.dateLocked = "true";
+          return;
+      }
+      if (startBtn.dataset.dateLocked === "true") {
+          delete startBtn.dataset.dateLocked;
+          startBtn.disabled = Boolean(startBtn.dataset.startTime);
+      }
+  }
 
   function getCurrentDateTime() {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -74,10 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateTimeText(startIso, endIso) {
       if (startTimeText) {
-          startTimeText.textContent = startIso ? `Start: ${formatTime(startIso)}` : "";
+          startTimeText.textContent = startIso ? `${t("time.start", "Start")}: ${formatTime(startIso)}` : "";
       }
       if (endTimeText) {
-          endTimeText.textContent = endIso ? `End: ${formatTime(endIso)}` : "";
+          endTimeText.textContent = endIso ? `${t("time.end", "End")}: ${formatTime(endIso)}` : "";
       }
   }
 
@@ -89,8 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
           timerStartTime = null;
           return;
       }
-      if (timerBtn) {
-          timerBtn.disabled = false;
+      if (timerDisplay) {
+          timerDisplay.classList.remove("is-disabled");
           timerInterval = setInterval(() => {
               const now = new Date();
               const diff = Math.max(0, now - timerStartTime);
@@ -99,21 +136,21 @@ document.addEventListener("DOMContentLoaded", () => {
               const minutes = Math.floor((totalSeconds % 3600) / 60);
               const seconds = totalSeconds % 60;
 
-              const hStr = String(hours).padStart(2, '0');
+             const hStr = String(hours).padStart(2, '0');
               const mStr = String(minutes).padStart(2, '0');
               const sStr = String(seconds).padStart(2, '0');
 
-              timerBtn.textContent = `${hStr}:${mStr}:${sStr}`;
+              timerDisplay.textContent = `${hStr}:${mStr}:${sStr}`;
           }, 1000);
       }
   }
 
   function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
-      if (timerBtn) {
-          timerBtn.disabled = false;
+      if (timerDisplay) {
+          timerDisplay.classList.remove("is-disabled");
           timerStartTime = new Date();
-          timerBtn.textContent = "00:00:00";
+          timerDisplay.textContent = "00:00:00";
           
           timerInterval = setInterval(() => {
               const now = new Date();
@@ -128,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
               const mStr = String(minutes).padStart(2, '0');
               const sStr = String(seconds).padStart(2, '0');
               
-              timerBtn.textContent = `${hStr}:${mStr}:${sStr}`;
+              timerDisplay.textContent = `${hStr}:${mStr}:${sStr}`;
           }, 1000);
       }
   }
@@ -138,17 +175,17 @@ document.addEventListener("DOMContentLoaded", () => {
           clearInterval(timerInterval);
           timerInterval = null;
           
-          if (timerStartTime && timerBtn) {
+          if (timerStartTime && timerDisplay) {
              const now = new Date();
              const diffMs = now - timerStartTime;
              const hoursDecimal = (diffMs / (1000 * 60 * 60)).toFixed(2);
-             timerBtn.textContent = `Total: ${hoursDecimal} Hrs`;
+             timerDisplay.textContent = `${t("time.total", "Total")}: ${hoursDecimal} ${t("time.hours", "Hrs")}`;
           }
       }
   }
 
   function setTotalHours(startIso, endIso) {
-      if (!timerBtn) return;
+      if (!timerDisplay) return;
       if (!startIso || !endIso) return;
       const startTime = new Date(startIso);
       const endTime = new Date(endIso);
@@ -157,20 +194,34 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const diffMs = Math.max(0, endTime - startTime);
       const hoursDecimal = (diffMs / (1000 * 60 * 60)).toFixed(2);
-      timerBtn.textContent = `Total: ${hoursDecimal} Hrs`;
-      timerBtn.disabled = false;
+      timerDisplay.textContent = `${t("time.total", "Total")}: ${hoursDecimal} ${t("time.hours", "Hrs")}`;
+      timerDisplay.classList.remove("is-disabled");
   }
 
   function applyShiftTimes(startIso, endIso) {
       lastStartIso = startIso || null;
+      lastEndIso = endIso || null;
       updateTimeText(startIso, endIso);
       updateButtonState(startIso, endIso);
+      const isPastDate = isPastAttendanceDate();
       
       if (timeLabels[0]) {
-          timeLabels[0].textContent = startIso ? `Start Time: ${formatTime(startIso)}` : "System Date & Time";
+          if (startIso) {
+              timeLabels[0].textContent = `${t("dash.start_time", "Start Time")}: ${formatTime(startIso)}`;
+          } else if (isPastDate) {
+              timeLabels[0].textContent = `${t("dash.start_time", "Start Time")}: --`;
+          } else {
+              timeLabels[0].textContent = t("dash.system_time", "System Date & Time");
+          }
       }
       if (timeLabels[1]) {
-          timeLabels[1].textContent = endIso ? `End Time: ${formatTime(endIso)}` : "System Date & Time";
+          if (endIso) {
+              timeLabels[1].textContent = `${t("dash.end_time", "End Time")}: ${formatTime(endIso)}`;
+          } else if (isPastDate) {
+              timeLabels[1].textContent = `${t("dash.end_time", "End Time")}: --`;
+          } else {
+              timeLabels[1].textContent = t("dash.system_time", "System Date & Time");
+          }
       }
       if (timerInterval) {
           clearInterval(timerInterval);
@@ -184,10 +235,15 @@ document.addEventListener("DOMContentLoaded", () => {
           setTotalHours(startIso, endIso);
           return;
       }
-      if (timerBtn) {
-          timerBtn.textContent = "Timer";
-          timerBtn.disabled = true;
+      if (timerDisplay) {
+          if (isPastDate) {
+              timerDisplay.textContent = `${t("dash.timer", "Timer")}: --`;
+          } else {
+              timerDisplay.textContent = t("dash.timer", "Timer");
+          }
+          timerDisplay.classList.add("is-disabled");
       }
+      applyDateGuard();
   }
 
   function ensureLocation() {
@@ -209,6 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
       endBtn?.dataset.endTime || null
   );
 
+  window.addEventListener("worker:language-changed", () => {
+      applyShiftTimes(lastStartIso, lastEndIso);
+  });
+  window.addEventListener("attendance:date-changed", () => {
+      applyDateGuard();
+  });
+  applyDateGuard();
+
   if (startBtn) {
       startBtn.addEventListener("click", async () => {
         // ... (existing start logic) ...
@@ -216,7 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         // 1. Gather all data
-        const dateText = document.querySelector('.date-info .date')?.textContent.trim();
+        const dateEl = document.querySelector('.date-info .date');
+        const dateText = dateEl?.textContent.trim();
         const shiftBtn = document.querySelector('.option-btn[data-select-group="shift"].selected');
         const statusBtn = document.querySelector('.option-btn[data-select-group="attendance-primary"].selected');
         
@@ -250,19 +315,20 @@ document.addEventListener("DOMContentLoaded", () => {
           "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
           "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
         };
-        const monthIndexMap = {
-          "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
-          "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
-        };
-        const [day, monthStr, year] = dateText.split("-");
-        const month = monthMap[monthStr];
-        if (!month) {
-          showToast("Invalid date format.", "error");
-          return;
+        let formattedDate = dateEl?.dataset?.isoDate || "";
+        if (!formattedDate) {
+          const [day, monthStr, year] = dateText.split("-");
+          const month = monthMap[monthStr];
+          if (!month) {
+            showToast("Invalid date format.", "error");
+            return;
+          }
+          formattedDate = `${year}-${month}-${day}`;
         }
-        const formattedDate = `${year}-${month}-${day}`;
 
-        if (timeLabels[0]) timeLabels[0].textContent = `Start Time: ${getCurrentDateTime()}`;
+        if (timeLabels[0]) {
+          timeLabels[0].textContent = `${t("dash.start_time", "Start Time")}: ${getCurrentDateTime()}`;
+        }
         
         // 4. Construct Payload
         const actualNow = new Date();
@@ -272,6 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lastStartIso = combinedISO;
 
         const payload = {
+           action: "start",
            attendance_date: formattedDate,
            shift_type: shiftType,
            status: status,
@@ -282,28 +349,10 @@ document.addEventListener("DOMContentLoaded", () => {
         
         console.log("Starting work with payload:", payload);
 
-        try {
-            const csrfToken = getCookie("csrftoken") || document.querySelector("input[name=csrfmiddlewaretoken]")?.value;
-            const response = await fetch("/worker/shift-upsert/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-            if (response.ok && data.ok) {
-                showToast("Work started successfully!", "success");
-                if (endBtn) endBtn.disabled = false;
-                applyShiftTimes(combinedISO, null);
-            } else {
-                showToast("Failed to start work: " + (data.message || "Unknown error"), "error");
-            }
-        } catch (err) {
-            console.error(err);
-            showToast("Network error.", "error");
+        const result = await saveShift(payload);
+        if (result?.ok) {
+            if (endBtn) endBtn.disabled = false;
+            applyShiftTimes(combinedISO, null);
         }
       });
   }
@@ -313,7 +362,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!ensureLocation()) {
           return;
         }
-        const dateText = document.querySelector('.date-info .date')?.textContent.trim();
+        const dateEl = document.querySelector('.date-info .date');
+        const dateText = dateEl?.textContent.trim();
         const shiftBtn = document.querySelector('.option-btn[data-select-group="shift"].selected');
         const statusBtn = document.querySelector('.option-btn[data-select-group="attendance-primary"].selected');
         const status = statusBtn?.dataset.attendancePrimary || "present";
@@ -327,15 +377,16 @@ document.addEventListener("DOMContentLoaded", () => {
           "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
           "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
         };
-        const monthIndexMap = {
-          "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
-          "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
-        };
-        const [day, monthStr, year] = dateText.split("-");
-        const formattedDate = `${year}-${monthMap[monthStr]}-${day}`;
+        let formattedDate = dateEl?.dataset?.isoDate || "";
+        if (!formattedDate) {
+          const [day, monthStr, year] = dateText.split("-");
+          formattedDate = `${year}-${monthMap[monthStr]}-${day}`;
+        }
         const shiftType = shiftBtn.dataset.shiftType;
 
-        if (timeLabels[1]) timeLabels[1].textContent = `End Time: ${getCurrentDateTime()}`;
+        if (timeLabels[1]) {
+          timeLabels[1].textContent = `${t("dash.end_time", "End Time")}: ${getCurrentDateTime()}`;
+        }
         
         stopTimer();
 
@@ -351,29 +402,11 @@ document.addEventListener("DOMContentLoaded", () => {
             worker_end_location: window.workerLocation ? window.workerLocation : null
         };
 
-        try {
-            const csrfToken = getCookie("csrftoken") || document.querySelector("input[name=csrfmiddlewaretoken]")?.value;
-            const response = await fetch("/worker/shift-upsert/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-            if (response.ok && data.ok) {
-                showToast("Work ended successfully!", "success");
-                endBtn.disabled = true;
-                if (startBtn) startBtn.disabled = true;
-                applyShiftTimes(lastStartIso, combinedISO);
-            } else {
-                showToast("Failed to end work: " + (data.message || "Unknown error"), "error");
-            }
-        } catch (err) {
-            console.error(err);
-            showToast("Network error.", "error");
+        const result = await saveShift(payload);
+        if (result?.ok) {
+            endBtn.disabled = true;
+            if (startBtn) startBtn.disabled = true;
+            applyShiftTimes(lastStartIso, combinedISO);
         }
       });
   }

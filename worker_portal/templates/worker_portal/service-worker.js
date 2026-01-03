@@ -3,6 +3,13 @@ const CACHE_NAME = "worker-portal-v1";
 const ASSETS = [
   "/worker/",
   "{% static 'worker_portal/styles.css' %}",
+  "{% static 'worker_portal/offline.js' %}",
+  "{% static 'worker_portal/app_state.js' %}",
+  "{% static 'worker_portal/i18n_ui.js' %}",
+  "{% static 'worker_portal/attendance_data.js' %}",
+  "{% static 'worker_portal/selection_ui.js' %}",
+  "{% static 'worker_portal/auth_ui.js' %}",
+  "{% static 'worker_portal/bootstrap.js' %}",
   "{% static 'worker_portal/app.js' %}",
   "{% static 'worker_portal/manifest.json' %}",
   "{% static 'worker_portal/icons/icon-192.svg' %}",

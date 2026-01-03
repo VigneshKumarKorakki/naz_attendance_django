@@ -28,7 +28,9 @@ class WorkerShiftUpsertSerializer(serializers.Serializer):
     worker_end_date_time = serializers.DateTimeField(required=False, allow_null=True)
     worker_start_location = serializers.JSONField(required=False, allow_null=True)
     worker_end_location = serializers.JSONField(required=False, allow_null=True)
-    action = serializers.ChoiceField(choices=["start", "end"], required=False, default="start")
+    action = serializers.ChoiceField(
+        choices=["start", "end", "location"], required=False, default="start"
+    )
 
 class ShiftSerializer(serializers.ModelSerializer):
     recorded_by_worker_name = serializers.CharField(source="recorded_by_worker.__str__", read_only=True, default=None)
